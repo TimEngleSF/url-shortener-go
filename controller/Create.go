@@ -28,7 +28,7 @@ func Create(c *gin.Context) {
 
 	// Invalid siteURL string
 	if _, err := url.ParseRequestURI(newLinkData.SiteURL); err != nil {
-		newLinkData.SiteURL = helpers.FixURLString(newLinkData.SiteURL)		
+		newLinkData.SiteURL = helpers.AddURLPrefix(newLinkData.SiteURL)		
 	}
 
 	// Validate the struct

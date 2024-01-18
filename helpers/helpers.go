@@ -3,10 +3,10 @@ package helpers
 import (
 	"math/rand"
 	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
-
 
 func GenerateParam(length int) string {
 	chars := "abcdefghijklmnopqrstuv0123456789"
@@ -17,14 +17,18 @@ func GenerateParam(length int) string {
 	return string(b)
 }
 
-func FixURLString(u string) string {
+func AddURLPrefix(u string) string {
+	if strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://") {
+		return u
+	}
+	
 	url := url.URL{
 		Scheme: "https",
-		Host: u,
+		Host:   u,
 	}
 	return url.String()
 }
-
+// TODO:// Change http:// to https when we get SSL certs
 func GetBaseURL(c *gin.Context) string {
 	req := c.Request
 	baseURL := "http://" + req.Host
