@@ -39,7 +39,7 @@ func Create(c *gin.Context) {
 
 	baseUrl := helpers.GetBaseURL(c)
 	// Check if site already exists in db, if so respond with link
-	existingSiteData := newLinkData.FindSiteURL() 
+	existingSiteData := newLinkData.FindSiteByURL() 
 	if existingSiteData != nil {
 		c.JSON(http.StatusOK, gin.H{"link" : baseUrl + "/" + existingSiteData.ParamURL})
 		return

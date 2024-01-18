@@ -14,6 +14,7 @@ func main() {
 
 	// TODO:
 	r.POST("/create", controller.Create)
+	r.GET("/:paramURL", controller.Redirect)
 
 	r.Run(":8000")
 }

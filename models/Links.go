@@ -16,6 +16,8 @@ type LinkData struct {
 	ParamURL string `json:"paramURL" bson:"paramURL"`
 }
 
+var validate = validator.New()
+
 // AddLinkData inserts a linkData document into the database.
 func (ld *LinkData) AddLinkData() (*LinkData, *mongo.InsertOneResult, error) {
 	// Validate the struct
@@ -46,9 +48,9 @@ func (ld *LinkData) AddLinkData() (*LinkData, *mongo.InsertOneResult, error) {
 }
 
 // FindSiteURL retrieves a linkData document from the database based on SiteURL.
-func (ld *LinkData) FindSiteURL() *LinkData {
+func (ld *LinkData) FindSiteByURL() *LinkData {
 	coll := db.GetDatabase().Collection("links")
-	fmt.Println("VIEW THE LINKDATA", ld)
+	
 	filter := bson.M{"siteURL": ld.SiteURL}
 
 	var result LinkData
@@ -58,8 +60,23 @@ func (ld *LinkData) FindSiteURL() *LinkData {
 		return nil
 	}
 	ld.ParamURL = result.ParamURL
-	fmt.Println("VIEW THE LINK DATA RESULT", ld.ParamURL)
+
 	return ld
 }
 
-var validate = validator.New()
+func (ld *LinkData) FindSiteByParam() *LinkData {
+	coll := db.GetDatabase().Collection("links")
+	fmt.Println("FINDBY", ld.ParamURL)
+	filter := bson.M{"paramURL": ld.ParamURL}
+	
+	var result LinkData
+
+	if err := coll.FindOne(context.TODO(), filter).Decode(&result); err != nil {
+		fmt.Println("err:", err)
+		return nil
+	}
+
+	ld.SiteURL = result.SiteURL
+
+	return ld
+}
