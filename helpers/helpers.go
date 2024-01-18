@@ -9,7 +9,8 @@ import (
 )
 
 func GenerateParam(length int) string {
-	chars := "abcdefghijklmnopqrstuv0123456789"
+	chars := "abcdefghijklmnopqrstuvwxyz0123456789" + 
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = chars[rand.Intn(len(chars))]
