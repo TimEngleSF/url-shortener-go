@@ -11,8 +11,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-
-
 var validate = validator.New()
 
 func Create(c *gin.Context) {
@@ -24,7 +22,7 @@ func Create(c *gin.Context) {
 
 	// Invalid siteURL string
 	if !helpers.IsValidURL(newLinkData.SiteURL) {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid link format"})	
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid link format"})
 		return
 	}
 
@@ -36,9 +34,9 @@ func Create(c *gin.Context) {
 
 	baseUrl := helpers.GetBaseURL(c)
 	// Check if site already exists in db, if so respond with link
-	existingSiteData := newLinkData.FindSiteByURL() 
+	existingSiteData := newLinkData.FindSiteByURL()
 	if existingSiteData != nil {
-		c.JSON(http.StatusOK, gin.H{"link" : baseUrl + "/" + existingSiteData.ParamURL})
+		c.JSON(http.StatusOK, gin.H{"link": baseUrl + "/" + existingSiteData.ParamURL})
 		return
 	}
 
@@ -48,10 +46,7 @@ func Create(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"link" : baseUrl + "/" + resultLinkData.ParamURL})
+	c.JSON(http.StatusCreated, gin.H{"link": baseUrl + "/" + resultLinkData.ParamURL})
 	fmt.Println(resultLinkData, res)
 	fmt.Printf("SiteURL: %s, ParamURL: %s\n", newLinkData.SiteURL, newLinkData.ParamURL)
-	
 }
-
-
