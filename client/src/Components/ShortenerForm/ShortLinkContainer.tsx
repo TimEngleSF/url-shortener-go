@@ -6,7 +6,7 @@ interface ShortLinkProps {
 }
 
 const ShortLinkContainer = ({ link, active }: ShortLinkProps) => {
-  const [opacityValue, setOpacityValue] = useState("opacity-0");
+  const [displayCopied, setDisplayCopied] = useState(false);
   const borderColor = active ? "border-green-500" : "border-gray-400";
   const buttonClases = active
     ? "bg-green-500"
@@ -21,16 +21,16 @@ const ShortLinkContainer = ({ link, active }: ShortLinkProps) => {
     // input.select();
     // document.execCommand("copy");
     // document.body.removeChild(input);
-    // setOpacityValue("opacity-1");
+    setDisplayCopied(true);
 
     navigator.clipboard.writeText(link);
     setTimeout(() => {
-      setOpacityValue("opacity-0");
+      setDisplayCopied(false);
     }, 2000);
   };
   return (
     <>
-      <div className="flex">
+      <div className="flex drop-shadow-lg ">
         <input
           type="text"
           className={`flex-1 rounded-l-sm rounded-r-none border-[1px] border-solid ${borderColor} border-r-0 py-1 indent-2`}
@@ -61,7 +61,9 @@ const ShortLinkContainer = ({ link, active }: ShortLinkProps) => {
           </svg>
         </button>
       </div>
-      <p className={`font-bold text-green-500 ${opacityValue} duration-300`}>
+      <p
+        className={`font-bold text-green-500 ${displayCopied ? "opacity-100" : "opacity-0"} duration-300`}
+      >
         Link Copied!
       </p>
     </>
