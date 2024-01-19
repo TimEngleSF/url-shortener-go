@@ -1,6 +1,7 @@
 .env
 /tmp
-
+pm2.config.js
+link-short
 
 # Logs
 logs
