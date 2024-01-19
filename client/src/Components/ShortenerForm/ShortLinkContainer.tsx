@@ -30,7 +30,7 @@ const ShortLinkContainer = ({ link, active }: ShortLinkProps) => {
   };
   return (
     <>
-      <div className="flex drop-shadow-lg ">
+      <div className="flex drop-shadow-lg">
         <input
           type="text"
           className={`flex-1 rounded-l-sm rounded-r-none border-[1px] border-solid ${borderColor} border-r-0 py-1 indent-2`}

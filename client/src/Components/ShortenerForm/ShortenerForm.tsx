@@ -57,8 +57,8 @@ const ShortenerForm = () => {
   };
 
   return (
-    <div className="flex w-full flex-col items-center rounded-md px-3 py-2">
-      <div className="flex w-full flex-col gap-6   md:w-3/4 ">
+    <div className="flex  flex-col items-center rounded-md px-3 py-2">
+      <div className="flex w-full max-w-96 flex-col gap-6">
         <div className="flex drop-shadow-lg">
           <input
             type="text"
