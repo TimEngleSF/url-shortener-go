@@ -2,11 +2,7 @@ package controller
 
 import (
 	"fmt"
-
-	// "io"
-
 	"net/http"
-	"net/url"
 
 	"link-short/helpers"
 	links "link-short/models"
@@ -27,8 +23,9 @@ func Create(c *gin.Context) {
 	}
 
 	// Invalid siteURL string
-	if _, err := url.ParseRequestURI(newLinkData.SiteURL); err != nil {
-		newLinkData.SiteURL = helpers.AddURLPrefix(newLinkData.SiteURL)		
+	if !helpers.IsValidURL(newLinkData.SiteURL) {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid link format"})	
+		return
 	}
 
 	// Validate the struct
