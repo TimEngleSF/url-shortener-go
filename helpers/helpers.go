@@ -3,6 +3,7 @@ package helpers
 import (
 	"math/rand"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -34,4 +35,12 @@ func GetBaseURL(c *gin.Context) string {
 	req := c.Request
 	baseURL := "http://" + req.Host
 	return baseURL
+}
+
+
+func IsValidURL(url string) bool {
+	pattern := `^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.[^\s]{2,}.*$`
+	regex := regexp.MustCompile(pattern)
+
+	return regex.MatchString(url)
 }
