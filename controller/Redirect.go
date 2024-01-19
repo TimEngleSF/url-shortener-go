@@ -14,17 +14,21 @@ func Redirect(c *gin.Context) {
 
 	fmt.Println("PARAM", paramURL)
 
-	if paramURL == ""{
-		c.Redirect(302, helpers.GetBaseURL(c))
+	if paramURL == "" {
+		c.Redirect(302, helpers.GetBaseURL(c)+"?error=Invalid URL")
 		return
 	}
-	
+
 	newLinkData.ParamURL = paramURL
 
-	
-	redirectLinkData := newLinkData.FindSiteByParam()
-	fmt.Println(redirectLinkData)
+	redirectLinkData, err := newLinkData.FindSiteByParam()
 
+	if err != nil {
+		c.Redirect(302, helpers.GetBaseURL(c)+"?error=Unable to find link")
+		return
+	}
+
+	fmt.Println(redirectLinkData)
 
 	c.Redirect(302, redirectLinkData.SiteURL)
 }
