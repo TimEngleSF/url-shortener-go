@@ -64,7 +64,7 @@ func (ld *LinkData) FindSiteByURL() *LinkData {
 	return ld
 }
 
-func (ld *LinkData) FindSiteByParam() *LinkData {
+func (ld *LinkData) FindSiteByParam() (*LinkData, error) {
 	coll := db.GetDatabase().Collection("links")
 	fmt.Println("FINDBY", ld.ParamURL)
 	filter := bson.M{"paramURL": ld.ParamURL}
@@ -73,10 +73,10 @@ func (ld *LinkData) FindSiteByParam() *LinkData {
 
 	if err := coll.FindOne(context.TODO(), filter).Decode(&result); err != nil {
 		fmt.Println("err:", err)
-		return nil
+		return nil, err
 	}
 
 	ld.SiteURL = result.SiteURL
 
-	return ld
+	return ld, nil
 }

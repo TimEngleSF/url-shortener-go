@@ -4,7 +4,7 @@ import ShortLinkContainer from "./ShortLinkContainer";
 
 const ShortenerForm = () => {
   const [linkReady, setLinkReady] = useState(false);
-  const [shortURL, setShortURL] = useState("https://examp.le/aBCDEF");
+  const [shortURL, setShortURL] = useState("https://l.timengle.dev/aBCDEF");
   const [urlInput, setUrlInput] = useState("");
   const [errHighlight, setErrHighlight] = useState(false);
   const [showErr, setShowErr] = useState(false);
