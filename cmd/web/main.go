@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 
@@ -22,7 +23,7 @@ func main() {
 	dbUser := flag.String("dbuser", "user", "PSQL database user")
 	dbPass := flag.String("dbpass", "", "PSQL database password")
 	dbSSLFlag := flag.Bool("dbssl", false, "PSQL database ssl mode")
-	useEnvFile := flag.Bool("useEnvFile", false, "Use a .env file")
+	// useEnvFile := flag.Bool("useEnvFile", false, "Use a .env file")
 
 	flag.Parse()
 
@@ -47,6 +48,24 @@ func main() {
 
 	/* OPEN DB */
 	err := Postgres.OpenDb()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	app := &application{
+		Postgres: &Postgres,
+		logger:   logger,
+	}
+	logger.Info("starting server", "addr", *addr)
+
+	err = http.ListenAndServe(port, app.routes())
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	logger.Info("server running")
 }
 
 func ConvPort(port string) string {
