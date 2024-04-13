@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -13,6 +14,12 @@ import (
 type application struct {
 	Postgres *db.Postgres
 	logger   *slog.Logger
+}
+
+type Link struct {
+	ShortUrl    string
+	RedirectUrl string
+	Suffix      string
 }
 
 func main() {
@@ -74,4 +81,9 @@ func ConvPort(port string) string {
 		return ":" + port
 	}
 	return port
+}
+
+func isValidUrl(input string) bool {
+	u, err := url.Parse(input)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
