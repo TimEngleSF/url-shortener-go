@@ -8,6 +8,7 @@
         id="linkInput"
         value="{{ .Link.RedirectUrl }}"
         autofocus
+        onfocus="this.select();"
     />
     {{ else }}
     {{ if .Link  }}
