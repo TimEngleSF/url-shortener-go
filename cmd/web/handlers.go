@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/TimEngleSF/url-shortener-go/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +49,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	ok := isValidUrl(linkStr)
 	if !ok {
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
-		data.Link = &Link{RedirectUrl: linkStr}
+		data.Link = &models.Link{RedirectUrl: linkStr}
 
 		err = ts.ExecuteTemplate(w, "form", data)
 		if err != nil {
@@ -55,8 +58,25 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link := &Link{RedirectUrl: linkStr}
+	link := &models.Link{RedirectUrl: linkStr}
+	hostAddr := r.Host
+	link.Suffix = models.CreateSuffix()
+
+	shortUrl, err := link.CreateShortUrl(hostAddr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	link.ShortUrl = "https://" + shortUrl
+	_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
+	if err != nil {
+		fmt.Println("Error inserting link into database: ", err)
+		app.serverError(w, r, err)
+		return
+	}
 	data.Link = link
+
 	err = ts.ExecuteTemplate(w, "form", data)
 	if err != nil {
 		app.serverError(w, r, err)
