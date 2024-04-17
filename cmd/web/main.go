@@ -9,23 +9,19 @@ import (
 	"strings"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/db"
+	"github.com/TimEngleSF/url-shortener-go/internal/models"
 )
 
 type application struct {
 	Postgres *db.Postgres
+	link     *models.LinkModel
 	logger   *slog.Logger
-}
-
-type Link struct {
-	ShortUrl    string
-	RedirectUrl string
-	Suffix      string
 }
 
 func main() {
 	addr := flag.String("addr", "8080", "HTTP networking address")
 	dbHost := flag.String("dbhost", "localhost", "PSQL database host")
-	dbName := flag.String("dbname", "srscore", "PSQL database name")
+	dbName := flag.String("dbname", "url-shortener", "PSQL database name")
 	dbPort := flag.String("dbport", "5432", "PSQL database port")
 	dbUser := flag.String("dbuser", "user", "PSQL database user")
 	dbPass := flag.String("dbpass", "", "PSQL database password")
@@ -62,6 +58,7 @@ func main() {
 
 	app := &application{
 		Postgres: &Postgres,
+		link:     &models.LinkModel{DB: Postgres.DB},
 		logger:   logger,
 	}
 	logger.Info("starting server", "addr", *addr)
