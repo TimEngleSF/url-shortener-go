@@ -1,0 +1,31 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>URL Shortener</title>
+        <script
+            src="https://unpkg.com/htmx.org@1.9.11"
+            integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0"
+            crossorigin="anonymous"
+        ></script>
+        <link
+            rel="shortcut icon"
+            href="/static/img/favicon.ico"
+            type="image/x-icon"
+        />
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">Snippetbox</a></h1>
+        </header>
+        <main>
+            {{ template "form" . }}
+        </main>
+        <footer>
+            Powered by <a href="https://golang.org/">Go</a> in
+            {{ .CurrentYear }}
+        </footer>
+    </body>
+</html>
+{{ end }}

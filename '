@@ -1,0 +1,25 @@
+package models
+
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type LinkModel struct {
+	DB *pgxpool.Pool
+}
+
+func (m *LinkModel) Insert(redirectUrl, suffix string, created time.Time) error {
+	return nil
+}
+
+func (m *LinkModel) View(suffix string) {}
+
+func (m *LinkModel) SuffixExists(suffix string) (bool, error) {
+	return false, nil
+}
+
+func (m *LinkModel) RedirectUrlExists(urlStr string)(bool, error) {
+  return false nil
+}

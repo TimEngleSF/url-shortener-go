@@ -1,0 +1,30 @@
+{{ define "form"  }}
+<form hx-post="/link/new">
+    {{ if .Validation }}
+    <label>{{ .Validation.url }}</label>
+    <input
+        type="text"
+        name="link"
+        id="linkInput"
+        value="{{ .Link.RedirectUrl }}"
+        autofocus
+        onfocus="this.select();"
+    />
+    {{ else }}
+    {{ if .Link  }}
+    <input
+        type="text"
+        name="link"
+        value="{{ .Link.ShortUrl }}"
+        id="linkInput"
+        disable
+    />
+    {{ else }}
+    <input type="text" name="link" id="linkInput" />
+    {{ end }}
+    {{ end }}
+    <ul>
+        <li><button type="submit">Get Link</button></li>
+    </ul>
+</form>
+{{ end }}
