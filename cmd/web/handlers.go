@@ -9,6 +9,7 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("home")
 	data := app.newTemplateData(r)
 
 	files := []string{
@@ -25,6 +26,17 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, r, err)
 	}
+}
+
+func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
+	suffix := r.URL.Path[1:]
+	link, err := app.link.GetBySuffix(r.Context(), suffix)
+	if err != nil {
+
+		app.clientError(w, r, http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, link.RedirectUrl, http.StatusSeeOther)
 }
 
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +80,8 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link.ShortUrl = "https://" + shortUrl
+	link.ShortUrl = shortUrl
+
 	_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
 	if err != nil {
 		fmt.Println("Error inserting link into database: ", err)

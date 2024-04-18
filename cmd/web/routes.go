@@ -10,6 +10,7 @@ func (app *application) routes() http.Handler {
 
 	mux.HandleFunc("GET /{$}", app.home)
 	mux.HandleFunc("POST /link/new", app.LinkPost)
+	mux.HandleFunc("GET /", app.LinkRedirect)
 
 	return app.logRequest(mux)
 }

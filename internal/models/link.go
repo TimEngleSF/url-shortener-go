@@ -67,9 +67,24 @@ func CreateSuffix() string {
 	return string(suffix)
 }
 
+func (m *LinkModel) GetBySuffix(ctx context.Context, suffix string) (Link, error) {
+	var link Link
+	stmt := `SELECT id, redirect_url, suffix, created_at FROM links
+  WHERE suffix = $1`
+	err := m.DB.QueryRow(ctx, stmt, suffix).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Link{}, ErrNoRecord
+		} else {
+			return Link{}, err
+		}
+	}
+	return link, nil
+}
+
 func (l Link) CreateShortUrl(host string) (string, error) {
 	if l.Suffix == "" {
 		return "", ErrEmptySuffix
 	}
-	return host + "/" + l.Suffix, nil
+	return "https://" + host + "/" + l.Suffix, nil
 }
