@@ -1,30 +1,51 @@
 {{ define "form"  }}
-<form hx-post="/link/new">
+<form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML">
     {{ if .Validation }}
-    <label>{{ .Validation.url }}</label>
-    <input
-        type="text"
-        name="link"
-        id="linkInput"
-        value="{{ .Link.RedirectUrl }}"
-        autofocus
-        onfocus="this.select();"
-    />
-    {{ else }}
+        <label>{{ .Validation.url }}</label>
+        <input
+            type="text"
+            name="link"
+            id="linkInput"
+            value="{{ .Link.RedirectUrl }}"
+            autofocus
+            onfocus="this.select();"
+        />
+    {{ else }} 
     {{ if .Link  }}
-    <input
-        type="text"
-        name="link"
-        value="{{ .Link.ShortUrl }}"
-        id="linkInput"
-        disable
-    />
+        {{ template "shortLinkInput" . }}
     {{ else }}
-    <input type="text" name="link" id="linkInput" />
-    {{ end }}
-    {{ end }}
-    <ul>
-        <li><button type="submit">Get Link</button></li>
-    </ul>
+        {{ template "defaultInput" . }}
+    {{ end }} <!-- end if .Link -->
+    {{ end }} <!-- end if .Validation -->
+    <div>
+        <ul>
+        {{ if (and (.Link ) (gt  (len .Link.ShortUrl) 0)) }}
+            {{ template "buttonList" . }}
+        {{ else }}
+            {{ template "submitButton" . }}
+        {{ end }}
+        
+        </ul>
+    </div>
 </form>
+{{ end }}
+
+
+{{ block "defaultInput" .}}
+  <input type="text" name="link" id="linkInput"/>
+{{ end }}
+
+{{block "shortLinkInput" .}} 
+<input type="text" name="link" value="{{ .Link.ShortUrl }}" id="linkInput" disabled/>
+<!-- TODO: Create copy, share, and reset button -->
+{{end}}
+
+{{ block "submitButton" . }}
+<li><button type="submit">Get Link</button></li>
+{{ end }}
+
+{{ block "buttonList" . }}
+<li><button type="button" id="copyButton">Copy</button></li>
+<li><button type="button" id="shareButton">Share</button></li> <!-- Use alpinejs to create a modal or popup of buttons to Social media shares -->
+<li><button type="button" id="resetButton">Reset</button></li> <!-- Swap body for form at GET "/new" -->
 {{ end }}
