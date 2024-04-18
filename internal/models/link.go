@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -40,7 +39,6 @@ func (m *LinkModel) View(ctx context.Context, suffix string) (Link, error) {
   WHERE suffix = $1`
 	err := m.DB.QueryRow(ctx, stmt, suffix).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
 	if err != nil {
-		fmt.Print(err)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return Link{}, ErrNoRecord
 		} else {
