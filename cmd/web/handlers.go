@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
@@ -14,6 +16,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 	suffix := r.URL.Path[1:]
+
 	link, err := app.link.GetBySuffix(r.Context(), suffix)
 	if err != nil {
 
@@ -27,19 +30,22 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var data templateData
+	var link models.Link
+	var err error
+
+	err = r.ParseForm()
 	if err != nil {
-		// TODO: Create a map to store Error messages in to notify user
 		app.clientError(w, r, http.StatusBadRequest)
 	}
-	linkStr := r.PostForm.Get("link")
 
-	data := app.newTemplateData(r)
+	linkStr := r.PostForm.Get("link")
 
 	// Check if the link is a valid URL
 	ok := isValidUrl(linkStr)
 	// If the URL is not valid, add an error message to the data map and render the form again
 	if !ok {
+		data = app.newTemplateData(r)
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
@@ -47,27 +53,43 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a new Link struct and generate a suffix
-	link := &models.Link{RedirectUrl: linkStr}
-	hostAddr := r.Host
-	link.Suffix = models.CreateSuffix()
+	// Check if the URL already exists in the database
+	link, err = app.link.GetByURL(r.Context(), linkStr)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			// If the URL does not exist, create a new Link struct
+			// in the next block of code
+		} else {
+			app.serverError(w, r, err)
+			return
+		}
+	}
+
+	// If the URL does not exist in the database, create a new Link struct
+	if link.Suffix == "" {
+		link = models.Link{RedirectUrl: linkStr}
+		link.Suffix = models.CreateSuffix()
+
+		// Insert the link into the database
+		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+	}
 
 	// Create a short URL
+	hostAddr := r.Host
 	shortUrl, err := link.CreateShortUrl(hostAddr)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	link.ShortUrl = shortUrl
 
-	// Insert the link into the database
-	_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	link.ShortUrl = shortUrl
 	// Add the short URL to the data template
-	data.Link = link
+	data.Link = &link
+	fmt.Printf("Link: %#v", data.Link)
 	// Render the form template with the short URL
 	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
 }
