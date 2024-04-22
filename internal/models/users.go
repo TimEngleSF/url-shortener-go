@@ -19,12 +19,20 @@ type User struct {
 	UpdatedAt      time.Time
 }
 
-func (m *UserModel) Insert(name, email, password string) error {
-	return nil
+type UserModelInterface interface {
+	Insert(name, email, password string) (*User, error)
+	Authenticate(email, password string) (*User, error)
+	Get(id int) (*User, error)
+	ChangePassword(id int, currentPassword, newPassword string) error
+	Exists(email string) (bool, error)
 }
 
-func (m *UserModel) Authenticate(email, password string) (int, error) {
-	return 0, nil
+func (m *UserModel) Insert(name, email, password string) (*User, error) {
+	return nil, nil
+}
+
+func (m *UserModel) Authenticate(email, password string) (*User, error) {
+	return nil, nil
 }
 
 func (m *UserModel) Get(id int) (*User, error) {
@@ -37,8 +45,4 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 
 func (m *UserModel) Exists(email string) (bool, error) {
 	return false, nil
-}
-
-func (m *UserModel) ChangeName(id int, name string) error {
-	return nil
 }

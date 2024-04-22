@@ -24,6 +24,14 @@ type Link struct {
 	ShortUrl    string
 }
 
+type LinkModelInterface interface {
+	Insert(ctx context.Context, redirectUrl, suffix string) (Link, error)
+	View(ctx context.Context, suffix string) (Link, error)
+	GetBySuffix(ctx context.Context, suffix string) (Link, error)
+	GetByURL(ctx context.Context, url string) (Link, error)
+	URLExists(urlStr string) (bool, error)
+}
+
 func (m *LinkModel) Insert(ctx context.Context, redirectUrl, suffix string) (Link, error) {
 	stmt := `INSERT INTO links (redirect_url, suffix) VALUES ($1, $2)`
 	_, err := m.DB.Exec(ctx, stmt, redirectUrl, suffix)

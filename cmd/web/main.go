@@ -15,7 +15,7 @@ import (
 
 type application struct {
 	Postgres      *db.Postgres
-	link          *models.LinkModel
+	link          models.LinkModelInterface
 	logger        *slog.Logger
 	templateCache map[string]*template.Template
 }
@@ -35,8 +35,7 @@ func main() {
 	/* INIT LOGGER */
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	var port string
-	port = *addr
+	port := *addr
 
 	/* INIT POSTGRES STRUCT */
 	Postgres := db.Postgres{}
