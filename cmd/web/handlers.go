@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
@@ -11,74 +11,88 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/form/form.tmpl",
-	}
-	ts, err := template.ParseFiles(files...)
+	app.render(w, r, http.StatusOK, "form.tmpl", data)
+}
+
+func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
+	suffix := r.URL.Path[1:]
+
+	link, err := app.link.GetBySuffix(r.Context(), suffix)
 	if err != nil {
-		app.serverError(w, r, err)
+		data := app.newTemplateData(r)
+		data.Validation["suffix"] = "Your link is not valid."
+		data.Link = &models.Link{}
+		app.render(w, r, http.StatusBadRequest, "form.tmpl", data)
 		return
 	}
-
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	http.Redirect(w, r, link.RedirectUrl, http.StatusSeeOther)
 }
 
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var data templateData
+	var link models.Link
+	var err error
+
+	err = r.ParseForm()
 	if err != nil {
-		// TODO: Create a map to store Error messages in to notify user
 		app.clientError(w, r, http.StatusBadRequest)
 	}
+
 	linkStr := r.PostForm.Get("link")
 
-	files := []string{
-		"./ui/html/form/form.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
-
-	data := app.newTemplateData(r)
-
+	// Check if the link is a valid URL
 	ok := isValidUrl(linkStr)
+	// If the URL is not valid, add an error message to the data map and render the form again
 	if !ok {
+		data = app.newTemplateData(r)
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
-		err = ts.ExecuteTemplate(w, "form", data)
-		if err != nil {
-			app.serverError(w, r, err)
-		}
+		app.render(w, r, http.StatusOK, "form.tmpl", data)
 		return
 	}
 
-	link := &models.Link{RedirectUrl: linkStr}
-	hostAddr := r.Host
-	link.Suffix = models.CreateSuffix()
+	// Check if the URL already exists in the database
+	link, err = app.link.GetByURL(r.Context(), linkStr)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			// If the URL does not exist, create a new Link struct
+			// in the next block of code
+		} else {
+			app.serverError(w, r, err)
+			return
+		}
+	}
 
+	// If the URL does not exist in the database, create a new Link struct
+	if link.Suffix == "" {
+		link = models.Link{RedirectUrl: linkStr}
+		link.Suffix = models.CreateSuffix()
+
+		// Insert the link into the database
+		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+	}
+
+	// Create a short URL
+	hostAddr := r.Host
 	shortUrl, err := link.CreateShortUrl(hostAddr)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	link.ShortUrl = "https://" + shortUrl
-	_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
-	if err != nil {
-		fmt.Println("Error inserting link into database: ", err)
-		app.serverError(w, r, err)
-		return
-	}
-	data.Link = link
+	link.ShortUrl = shortUrl
+	// Add the short URL to the data template
+	data.Link = &link
+	fmt.Printf("Link: %#v", data.Link)
+	// Render the form template with the short URL
+	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
+}
 
-	err = ts.ExecuteTemplate(w, "form", data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+func (app *application) Ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }

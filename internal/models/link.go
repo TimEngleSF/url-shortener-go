@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -18,11 +17,19 @@ type LinkModel struct {
 }
 
 type Link struct {
-	ID          *int
+	ID          int
 	RedirectUrl string
 	Suffix      string
-	CreatedAt   *time.Time
+	CreatedAt   time.Time
 	ShortUrl    string
+}
+
+type LinkModelInterface interface {
+	Insert(ctx context.Context, redirectUrl, suffix string) (Link, error)
+	//	View(ctx context.Context, suffix string) (Link, error)
+	GetBySuffix(ctx context.Context, suffix string) (Link, error)
+	GetByURL(ctx context.Context, url string) (Link, error)
+	URLExists(urlStr string) (bool, error)
 }
 
 func (m *LinkModel) Insert(ctx context.Context, redirectUrl, suffix string) (Link, error) {
@@ -34,21 +41,20 @@ func (m *LinkModel) Insert(ctx context.Context, redirectUrl, suffix string) (Lin
 	return Link{RedirectUrl: redirectUrl, Suffix: suffix}, nil
 }
 
-func (m *LinkModel) View(ctx context.Context, suffix string) (Link, error) {
-	var link Link
-	stmt := `SELECT id, redirect_url, suffix, created_at FROM links
-  WHERE suffix = $1`
-	err := m.DB.QueryRow(ctx, stmt, suffix).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
-	if err != nil {
-		fmt.Print(err)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return Link{}, ErrNoRecord
-		} else {
-			return Link{}, err
-		}
-	}
-	return link, nil
-}
+// func (m *LinkModel) View(ctx context.Context, suffix string) (Link, error) {
+// 	var link Link
+// 	stmt := `SELECT id, redirect_url, suffix, created_at FROM links
+//   WHERE suffix = $1`
+// 	err := m.DB.QueryRow(ctx, stmt, suffix).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
+// 	if err != nil {
+// 		if errors.Is(err, pgx.ErrNoRows) {
+// 			return Link{}, ErrNoRecord
+// 		} else {
+// 			return Link{}, err
+// 		}
+// 	}
+// 	return link, nil
+// }
 
 func (m *LinkModel) SuffixExists(suffix string) (bool, error) {
 	return false, nil
@@ -67,9 +73,49 @@ func CreateSuffix() string {
 	return string(suffix)
 }
 
+func (m *LinkModel) GetBySuffix(ctx context.Context, suffix string) (Link, error) {
+	var link Link
+	stmt := `SELECT id, redirect_url, suffix, created_at FROM links
+  WHERE suffix = $1`
+	err := m.DB.QueryRow(ctx, stmt, suffix).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Link{}, ErrNoRecord
+		} else {
+			return Link{}, err
+		}
+	}
+	return link, nil
+}
+
+func (m *LinkModel) GetByURL(ctx context.Context, url string) (Link, error) {
+	var link Link
+	stmt := `SELECT id, redirect_url, suffix, created_at FROM links
+  WHERE redirect_url = $1`
+	err := m.DB.QueryRow(ctx, stmt, url).Scan(&link.ID, &link.RedirectUrl, &link.Suffix, &link.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Link{}, ErrNoRecord
+		} else {
+			return Link{}, err
+		}
+	}
+	return link, nil
+}
+
+func (m *LinkModel) URLExists(urlStr string) (bool, error) {
+	stmt := `SELECT COUNT(*) FROM links WHERE redirect_url = $1`
+	var exists bool
+	err := m.DB.QueryRow(context.Background(), stmt, urlStr).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (l Link) CreateShortUrl(host string) (string, error) {
 	if l.Suffix == "" {
 		return "", ErrEmptySuffix
 	}
-	return host + "/" + l.Suffix, nil
+	return "https://" + host + "/" + l.Suffix, nil
 }

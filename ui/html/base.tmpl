@@ -17,8 +17,11 @@
     </head>
     <body>
         <header>
-            <h1><a href="/">Snippetbox</a></h1>
+            <h1><a href="/">URL Shortener</a></h1>
         </header>
+        {{ with .Validation.suffix }}
+        <p class="error">{{ . }}</p>
+        {{ end }}
         <main>
             {{ template "form" . }}
         </main>

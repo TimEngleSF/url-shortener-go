@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -13,9 +13,10 @@ import (
 )
 
 type application struct {
-	Postgres *db.Postgres
-	link     *models.LinkModel
-	logger   *slog.Logger
+	Postgres      *db.Postgres
+	link          models.LinkModelInterface
+	logger        *slog.Logger
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -33,8 +34,7 @@ func main() {
 	/* INIT LOGGER */
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	var port string
-	port = *addr
+	port := *addr
 
 	/* INIT POSTGRES STRUCT */
 	Postgres := db.Postgres{}
@@ -56,10 +56,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
-		Postgres: &Postgres,
-		link:     &models.LinkModel{DB: Postgres.DB},
-		logger:   logger,
+		Postgres:      &Postgres,
+		link:          &models.LinkModel{DB: Postgres.DB},
+		logger:        logger,
+		templateCache: templateCache,
 	}
 	logger.Info("starting server", "addr", *addr)
 
@@ -78,9 +85,4 @@ func ConvPort(port string) string {
 		return ":" + port
 	}
 	return port
-}
-
-func isValidUrl(input string) bool {
-	u, err := url.Parse(input)
-	return err == nil && u.Scheme != "" && u.Host != ""
 }
