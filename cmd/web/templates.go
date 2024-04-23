@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/fs"
 	"path/filepath"
+	"time"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	"github.com/TimEngleSF/url-shortener-go/ui"
@@ -16,7 +17,16 @@ type templateData struct {
 }
 
 /* TEMPLATE FUNCTIONS */
-var functions = template.FuncMap{}
+var functions = template.FuncMap{
+	"humanDate": humanDate,
+}
+
+func humanDate(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.UTC().Format("Jan 02, 2006 at 3:04PM")
+}
 
 /* TEMPLATE CACHE */
 func newTemplateCache() (map[string]*template.Template, error) {
