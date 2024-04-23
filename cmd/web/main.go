@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -86,9 +85,4 @@ func ConvPort(port string) string {
 		return ":" + port
 	}
 	return port
-}
-
-func isValidUrl(input string) bool {
-	u, err := url.Parse(input)
-	return err == nil && u.Scheme != "" && u.Host != ""
 }
