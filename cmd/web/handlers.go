@@ -19,7 +19,6 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 
 	link, err := app.link.GetBySuffix(r.Context(), suffix)
 	if err != nil {
-
 		data := app.newTemplateData(r)
 		data.Validation["suffix"] = "Your link is not valid."
 		data.Link = &models.Link{}
@@ -92,4 +91,8 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Link: %#v", data.Link)
 	// Render the form template with the short URL
 	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
+}
+
+func (app *application) Ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }
