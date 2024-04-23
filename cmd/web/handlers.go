@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
@@ -88,7 +87,6 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	link.ShortUrl = shortUrl
 	// Add the short URL to the data template
 	data.Link = &link
-	fmt.Printf("Link: %#v", data.Link)
 	// Render the form template with the short URL
 	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
 }

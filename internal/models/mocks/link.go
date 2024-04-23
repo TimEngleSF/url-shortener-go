@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
@@ -37,8 +36,6 @@ func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix string) (mode
 }
 
 func (m *LinkMock) GetBySuffix(ctx context.Context, suffix string) (models.Link, error) {
-	fmt.Println(suffix)
-	fmt.Println(suffix == "abc123")
 	switch suffix {
 	case "abc123":
 		return mockLink, nil
