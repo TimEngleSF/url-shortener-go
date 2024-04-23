@@ -88,6 +88,7 @@ func TestLinkPost(t *testing.T) {
 		redirectURL  string
 		wantSuffix   string
 		wantShortUrl string
+		wantCode     int
 		displayText  []string
 	}{
 		{
@@ -96,6 +97,7 @@ func TestLinkPost(t *testing.T) {
 			displayText: []string{
 				fmt.Sprintf("%s/abc123", host),
 			},
+			wantCode: http.StatusCreated,
 		},
 		{
 			name:        "Invalid URL",
@@ -105,11 +107,13 @@ func TestLinkPost(t *testing.T) {
 				"Invalid Url: Be sure to include",
 				"google",
 			},
+			wantCode: http.StatusUnprocessableEntity,
 		},
 		{
 			name:        "Valid New URL",
 			redirectURL: "https://yahoo.com",
 			displayText: []string{host},
+			wantCode:    http.StatusCreated,
 		},
 	}
 
@@ -117,9 +121,10 @@ func TestLinkPost(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			form := url.Values{}
 			form.Add("link", tt.redirectURL)
-			_, _, body := ts.postForm(t, "/link/new", form)
+			code, _, body := ts.postForm(t, "/link/new", form)
 
 			assert.StringsContains(t, body, tt.displayText)
+			assert.Equal(t, code, tt.wantCode)
 		})
 	}
 }

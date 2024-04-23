@@ -47,7 +47,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
-		app.render(w, r, http.StatusOK, "form.tmpl", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "form.tmpl", data)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	// Add the short URL to the data template
 	data.Link = &link
 	// Render the form template with the short URL
-	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
+	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }
 
 func (app *application) Ping(w http.ResponseWriter, r *http.Request) {
