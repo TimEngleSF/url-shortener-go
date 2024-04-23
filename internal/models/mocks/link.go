@@ -7,6 +7,8 @@ import (
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 )
 
+var testInsertedSuffix = "123abc"
+
 var mockLink = models.Link{
 	ID:          1,
 	RedirectUrl: "https://google.com",
@@ -21,7 +23,7 @@ func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix string) (mode
 	l := models.Link{
 		ID:          2,
 		RedirectUrl: redirectUrl,
-		Suffix:      suffix,
+		Suffix:      testInsertedSuffix,
 		CreatedAt:   time.Now(),
 	}
 
@@ -45,7 +47,12 @@ func (m *LinkMock) GetBySuffix(ctx context.Context, suffix string) (models.Link,
 }
 
 func (m *LinkMock) GetByURL(ctx context.Context, url string) (models.Link, error) {
-	return models.Link{}, nil
+	switch url {
+	case "https://google.com":
+		return mockLink, nil
+	default:
+		return models.Link{}, models.ErrNoRecord
+	}
 }
 
 func (m *LinkMock) URLExists(urlStr string) (bool, error) {
