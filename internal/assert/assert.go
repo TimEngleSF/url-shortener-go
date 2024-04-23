@@ -20,3 +20,13 @@ func StringContains(t *testing.T, actual, expectedSubstring string) {
 		t.Errorf("got: %q; expected to contain: %q", actual, expectedSubstring)
 	}
 }
+
+func StringsContains(t *testing.T, actual string, expectedSubstrings []string) {
+	t.Helper()
+
+	for _, s := range expectedSubstrings {
+		if !strings.Contains(actual, s) {
+			t.Errorf("got: %q; expected to contain: %q", actual, s)
+		}
+	}
+}
