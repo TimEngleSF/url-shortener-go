@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/assert"
@@ -72,11 +75,51 @@ func TestLinkRedirect(t *testing.T) {
 			assert.StringContains(t, body, tt.wantBody)
 		})
 	}
+}
 
-	// code, header, body := ts.get(t, "/abc123")
-	// loc := header.Get("Location")
+func TestLinkPost(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	host := ts.URL
+	host, _ = strings.CutPrefix(host, "http")
 
-	// assert.Equal(t, loc, "https://google.com")
-	// assert.Equal(t, code, http.StatusSeeOther)
-	// assert.StringContains(t, body, `<a href="https://google.com">See Other</a>`)
+	tests := []struct {
+		name         string
+		redirectURL  string
+		wantSuffix   string
+		wantShortUrl string
+		displayText  []string
+	}{
+		{
+			name:        "Valid Existing URL",
+			redirectURL: "https://google.com",
+			displayText: []string{
+				fmt.Sprintf("%s/abc123", host),
+			},
+		},
+		{
+			name:        "Invalid URL",
+			redirectURL: "google",
+			wantSuffix:  "",
+			displayText: []string{
+				"Invalid Url: Be sure to include",
+				"google",
+			},
+		},
+		{
+			name:        "Valid New URL",
+			redirectURL: "https://yahoo.com",
+			displayText: []string{host},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("link", tt.redirectURL)
+			_, _, body := ts.postForm(t, "/link/new", form)
+
+			assert.StringsContains(t, body, tt.displayText)
+		})
+	}
 }
