@@ -14,7 +14,7 @@ type templateData struct {
 	CurrentYear int
 	Link        *models.Link
 	Validation  map[string]string
-	QRImg       []byte
+	QRImgPath   string
 }
 
 /* TEMPLATE FUNCTIONS */

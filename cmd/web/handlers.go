@@ -22,16 +22,15 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 		data.Validation["suffix"] = "Your link is not valid."
 		data.Link = &models.Link{}
 		app.render(w, r, http.StatusBadRequest, "form.tmpl", data)
-
 		return
 	}
 	http.Redirect(w, r, link.RedirectUrl, http.StatusSeeOther)
 }
 
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
-	var data templateData
 	var link models.Link
 	var err error
+	data := app.newTemplateData(r)
 
 	err = r.ParseForm()
 	if err != nil {
@@ -44,19 +43,10 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	ok := isValidUrl(linkStr)
 	// If the URL is not valid, add an error message to the data map and render the form again
 	if !ok {
-		data = app.newTemplateData(r)
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
-		// 	html := app.templateCache["form.tmpl"]
-		// 	err = html.Execute(w, data)
-		// 	if err != nil {
-		// 		app.serverError(w, r, err)
-		// 		return
-		// 	}
-		app.renderComponent(w, r, http.StatusUnprocessableEntity, "./ui/html/pages/form.tmpl", data)
-		// app.render(w, r, http.StatusUnprocessableEntity, "form.tmpl", data)
-
+		app.render(w, r, http.StatusOK, "form.tmpl", data)
 		return
 	}
 
@@ -98,12 +88,13 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	data.Link = &link
 
 	// Create QR
-	// qrImg, err := app.qr.CreateMedium(shortUrl)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
-	// data.QRImg = qrImg
+	qrPath, err := app.qr.CreateMedium(shortUrl)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data.QRImgPath = qrPath
 
 	// Render the form template with the short URL
 	app.render(w, r, http.StatusCreated, "form.tmpl", data)

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -54,17 +53,4 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 func isValidUrl(input string) bool {
 	u, err := url.ParseRequestURI(input)
 	return err == nil && u.Scheme != "" && u.Host != ""
-}
-
-func (app *application) renderComponent(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
-	ts, err := template.ParseFiles(page)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
 }
