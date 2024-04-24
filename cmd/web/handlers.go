@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
@@ -29,9 +28,9 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
-	var data templateData
 	var link models.Link
 	var err error
+	data := app.newTemplateData(r)
 
 	err = r.ParseForm()
 	if err != nil {
@@ -44,7 +43,6 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	ok := isValidUrl(linkStr)
 	// If the URL is not valid, add an error message to the data map and render the form again
 	if !ok {
-		data = app.newTemplateData(r)
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
@@ -88,9 +86,18 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	link.ShortUrl = shortUrl
 	// Add the short URL to the data template
 	data.Link = &link
-	fmt.Printf("Link: %#v", data.Link)
+
+	// Create QR
+	qrPath, err := app.qr.CreateMedium(shortUrl)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data.QRImgPath = qrPath
+
 	// Render the form template with the short URL
-	app.render(w, r, http.StatusAccepted, "form.tmpl", data)
+	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }
 
 func (app *application) Ping(w http.ResponseWriter, r *http.Request) {

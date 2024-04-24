@@ -24,9 +24,11 @@
         {{ else }}
             {{ template "submitButton" . }}
         {{ end }}
-        
         </ul>
     </div>
+    {{ with .QRImgPath }}
+        {{ template "qrCode" . }}
+    {{ end }}
 </form>
 {{ end }}
 
@@ -47,5 +49,11 @@
 {{ block "buttonList" . }}
 <li><button type="button" id="copyButton">Copy</button></li>
 <li><button type="button" id="shareButton">Share</button></li> <!-- Use alpinejs to create a modal or popup of buttons to Social media shares -->
+<li><button type="button" id="qrButton">QR</button></li>       <!-- Use alpine to show qrCode -->
 <li><button type="button" id="resetButton">Reset</button></li> <!-- Swap body for form at GET "/new" -->
 {{ end }}
+
+{{ block "qrCode" . }}
+<img src="{{ . }}" alt="QR Code" />
+{{ end }}
+

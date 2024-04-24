@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models/mocks"
@@ -52,6 +53,23 @@ func (ts *testServer) get(t *testing.T, urlPath string) (status int, header http
 		t.Fatal(err)
 	}
 
+	defer rs.Body.Close()
+
+	b, err := io.ReadAll(rs.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body = string(bytes.TrimSpace(b))
+
+	return rs.StatusCode, rs.Header, body
+}
+
+func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (code int, header http.Header, body string) {
+	path := ts.URL + urlPath
+	rs, err := ts.Client().PostForm(path, form)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer rs.Body.Close()
 
 	b, err := io.ReadAll(rs.Body)
