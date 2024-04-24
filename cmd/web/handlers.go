@@ -22,6 +22,7 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 		data.Validation["suffix"] = "Your link is not valid."
 		data.Link = &models.Link{}
 		app.render(w, r, http.StatusBadRequest, "form.tmpl", data)
+
 		return
 	}
 	http.Redirect(w, r, link.RedirectUrl, http.StatusSeeOther)
@@ -47,7 +48,15 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
 		data.Link = &models.Link{RedirectUrl: linkStr}
 
-		app.render(w, r, http.StatusUnprocessableEntity, "form.tmpl", data)
+		// 	html := app.templateCache["form.tmpl"]
+		// 	err = html.Execute(w, data)
+		// 	if err != nil {
+		// 		app.serverError(w, r, err)
+		// 		return
+		// 	}
+		app.renderComponent(w, r, http.StatusUnprocessableEntity, "./ui/html/pages/form.tmpl", data)
+		// app.render(w, r, http.StatusUnprocessableEntity, "form.tmpl", data)
+
 		return
 	}
 
@@ -87,6 +96,15 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	link.ShortUrl = shortUrl
 	// Add the short URL to the data template
 	data.Link = &link
+
+	// Create QR
+	// qrImg, err := app.qr.CreateMedium(shortUrl)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
+	// data.QRImg = qrImg
+
 	// Render the form template with the short URL
 	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }

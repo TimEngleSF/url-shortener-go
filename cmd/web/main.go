@@ -10,6 +10,7 @@ import (
 
 	"github.com/TimEngleSF/url-shortener-go/internal/db"
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
+	"github.com/TimEngleSF/url-shortener-go/internal/qr"
 )
 
 type application struct {
@@ -17,6 +18,7 @@ type application struct {
 	link          models.LinkModelInterface
 	logger        *slog.Logger
 	templateCache map[string]*template.Template
+	qr            qr.QRCodeInterface
 }
 
 func main() {
@@ -67,6 +69,7 @@ func main() {
 		link:          &models.LinkModel{DB: Postgres.DB},
 		logger:        logger,
 		templateCache: templateCache,
+		qr:            &qr.QRCode{},
 	}
 	logger.Info("starting server", "addr", *addr)
 
