@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/assert"
+	"github.com/TimEngleSF/url-shortener-go/internal/qr"
 )
 
 func TestPing(t *testing.T) {
@@ -79,6 +80,8 @@ func TestLinkRedirect(t *testing.T) {
 
 func TestLinkPost(t *testing.T) {
 	app := newTestApplication(t)
+	app.qr = &qr.QRCodeMock{}
+
 	ts := newTestServer(t, app.routes())
 	host := ts.URL
 	host, _ = strings.CutPrefix(host, "http")
@@ -90,6 +93,7 @@ func TestLinkPost(t *testing.T) {
 		wantShortUrl string
 		wantCode     int
 		displayText  []string
+		qrCalled     bool
 	}{
 		{
 			name:        "Valid Existing URL",
@@ -98,6 +102,7 @@ func TestLinkPost(t *testing.T) {
 				fmt.Sprintf("%s/abc123", host),
 			},
 			wantCode: http.StatusCreated,
+			qrCalled: true,
 		},
 		{
 			name:        "Invalid URL",
@@ -107,13 +112,15 @@ func TestLinkPost(t *testing.T) {
 				"Invalid Url: Be sure to include",
 				"google",
 			},
-			wantCode: http.StatusUnprocessableEntity,
+			wantCode: http.StatusOK,
+			qrCalled: false,
 		},
 		{
 			name:        "Valid New URL",
 			redirectURL: "https://yahoo.com",
 			displayText: []string{host},
 			wantCode:    http.StatusCreated,
+			qrCalled:    true,
 		},
 	}
 

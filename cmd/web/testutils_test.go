@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models/mocks"
+	"github.com/TimEngleSF/url-shortener-go/internal/qr"
 )
 
 func newTestApplication(t *testing.T) *application {
@@ -23,6 +24,7 @@ func newTestApplication(t *testing.T) *application {
 		logger:        slog.New(slog.NewTextHandler(io.Discard, nil)),
 		templateCache: templateCache,
 		link:          &mocks.LinkMock{},
+		qr:            &qr.QRCodeMock{},
 	}
 }
 
