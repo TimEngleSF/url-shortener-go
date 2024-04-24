@@ -24,11 +24,10 @@
         {{ else }}
             {{ template "submitButton" . }}
         {{ end }}
-        
         </ul>
     </div>
-    {{ with .QRImg }}
-      <p>{{ . }}</p>
+    {{ with .QRImgPath }}
+        {{ template "qrCode" . }}
     {{ end }}
 </form>
 {{ end }}
@@ -55,5 +54,6 @@
 {{ end }}
 
 {{ block "qrCode" . }}
-<p></p>
+<img src="{{ . }}" alt="QR Code" />
 {{ end }}
+
