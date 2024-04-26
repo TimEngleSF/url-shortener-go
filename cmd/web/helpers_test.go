@@ -57,6 +57,43 @@ func TestIsValidURL(t *testing.T) {
 	}
 }
 
+func TestIsValidEmail(t *testing.T) {
+	tests := []struct {
+		name  string
+		email string
+		want  bool
+	}{
+		{
+			name:  "Valid email",
+			email: "john@example.com",
+			want:  true,
+		},
+		{
+			name:  "missing @ email",
+			email: "johnemail.com",
+			want:  false,
+		},
+		{
+			name:  "missing to level domain ext",
+			email: "john@emailcom",
+			want:  true,
+		},
+		{
+			name:  "missing user name",
+			email: "@email.com",
+			want:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isValid := isValidEmail(tt.email)
+
+			assert.Equal(t, isValid, tt.want)
+		})
+	}
+}
+
 func TestServerError(t *testing.T) {
 	app := newTestApplication(t)
 	tests := []struct {
