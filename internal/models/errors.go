@@ -8,4 +8,5 @@ var (
 	ErrUniqueViolation  = errors.New("models: unique constraint violation")
 	ErrInsertRow        = errors.New("models: error inserting row")
 	ErrEmptySuffix      = errors.New("models: empty suffix")
+	ErrDuplicateEmail   = errors.New("models: duplicate email")
 )
