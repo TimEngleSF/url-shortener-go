@@ -2,13 +2,16 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
+	validator "github.com/TimEngleSF/url-shortener-go/internal/validators"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = linkCreateForm{}
 
 	app.render(w, r, http.StatusOK, "form.tmpl", data)
 }
@@ -26,6 +29,7 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 	link, err := app.link.GetBySuffix(r.Context(), suffix)
 	if err != nil {
 		data := app.newTemplateData(r)
+		data.Form = linkCreateForm{}
 		data.Validation["suffix"] = "Your link is not valid."
 		data.Link = &models.Link{}
 		app.render(w, r, http.StatusBadRequest, "form.tmpl", data)
@@ -35,6 +39,12 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 }
 
 // // LINK POST ////
+
+type linkCreateForm struct {
+	Link models.Link
+	validator.Validator
+}
+
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	var err error
@@ -47,13 +57,19 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 
 	linkStr := r.PostForm.Get("link")
 
-	// Check if the link is a valid URL
-	ok := isValidUrl(linkStr)
-	// If the URL is not valid, add an error message to the data map and render the form again
-	if !ok {
-		data.Validation["url"] = "Invalid Url: Be sure to include 'https://' or 'http://'"
-		data.Link = &models.Link{RedirectUrl: linkStr}
+	form := linkCreateForm{
+		Link: models.Link{
+			RedirectUrl: linkStr,
+		},
+	}
 
+	form.CheckField(validator.NotBlank(form.Link.RedirectUrl), "url", "Invalid URL: URL must not be blank")
+	form.CheckField(validator.IsValidUrl(form.Link.RedirectUrl), "url", "Invalid URL: Be sure to include 'https://' or 'http://'")
+	form.CheckField(validator.MaxChars(form.Link.RedirectUrl, 500), "url", "Invalid URL: URL length too long")
+
+	data.Form = form
+
+	if !form.Valid() {
 		app.render(w, r, http.StatusOK, "form.tmpl", data)
 		return
 	}
@@ -114,6 +130,23 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	app.render(w, r, http.StatusOK, "signup.tmpl", data)
+}
+
+func (app *application) SignUpPost(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	data := app.newTemplateData(r)
+
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest)
+	}
+
+	name := r.PostForm.Get("name")
+	email := r.PostForm.Get("email")
+	password := r.PostForm.Get("password")
+
+	fmt.Println(user, data)
+	fmt.Println(name, email, password)
 }
 
 // // LOGIN FORM ////

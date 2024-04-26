@@ -24,6 +24,7 @@
         <header>
             <h1><a href="/">URL Shortener</a></h1>
         </header>
+        {{ template "nav" . }}
         {{ with .Validation.suffix }}
         <p class="error">{{ . }}</p>
         {{ end }}

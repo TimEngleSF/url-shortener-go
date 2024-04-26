@@ -11,10 +11,12 @@ import (
 )
 
 type templateData struct {
-	CurrentYear int
-	Link        *models.Link
-	Validation  map[string]string
-	QRImgPath   string
+	CurrentYear     int
+	Link            *models.Link
+	Validation      map[string]string
+	QRImgPath       string
+	Form            any
+	IsAuthenticated bool
 }
 
 /* TEMPLATE FUNCTIONS */
@@ -42,7 +44,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		name := filepath.Base(page)
 		patterns := []string{
 			"html/base.tmpl",
-			// "html/partials/*.tmpl",
+			"html/partials/*.tmpl",
 			page,
 		}
 

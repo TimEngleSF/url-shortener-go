@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"net/url"
 	"runtime/debug"
 	"time"
 )
@@ -48,9 +47,4 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	w.WriteHeader(status)
 
 	buf.WriteTo(w)
-}
-
-func isValidUrl(input string) bool {
-	u, err := url.ParseRequestURI(input)
-	return err == nil && u.Scheme != "" && u.Host != ""
 }
