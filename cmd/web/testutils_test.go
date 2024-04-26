@@ -12,6 +12,7 @@ import (
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models/mocks"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	"github.com/go-playground/form/v4"
 )
 
 func newTestApplication(t *testing.T) *application {
@@ -20,11 +21,13 @@ func newTestApplication(t *testing.T) *application {
 		t.Fatal(err)
 	}
 
+	formDecoder := form.NewDecoder()
 	return &application{
 		logger:        slog.New(slog.NewTextHandler(io.Discard, nil)),
 		templateCache: templateCache,
 		link:          &mocks.LinkMock{},
 		qr:            &qr.QRCodeMock{},
+		formDecoder:   formDecoder,
 	}
 }
 

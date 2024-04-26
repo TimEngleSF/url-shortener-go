@@ -11,6 +11,7 @@ import (
 	"github.com/TimEngleSF/url-shortener-go/internal/db"
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	"github.com/go-playground/form/v4"
 )
 
 type application struct {
@@ -19,6 +20,7 @@ type application struct {
 	logger        *slog.Logger
 	templateCache map[string]*template.Template
 	qr            qr.QRCodeInterface
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -64,12 +66,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		Postgres:      &Postgres,
 		link:          &models.LinkModel{DB: Postgres.DB},
 		logger:        logger,
 		templateCache: templateCache,
 		qr:            &qr.QRCode{},
+		formDecoder:   formDecoder,
 	}
 	logger.Info("starting server", "addr", *addr)
 
