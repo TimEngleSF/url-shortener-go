@@ -13,6 +13,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "form.tmpl", data)
 }
 
+func (app *application) Ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ////////////////////// LINKS ////////////////////////
+//
+// // REDIRECT ////
 func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 	suffix := r.URL.Path[1:]
 
@@ -27,6 +34,7 @@ func (app *application) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, link.RedirectUrl, http.StatusSeeOther)
 }
 
+// // LINK POST ////
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	var err error
@@ -100,6 +108,14 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }
 
-func (app *application) Ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+// ////////////////////// USERS ////////////////////////
+//
+// // SIGNUP FORM ////
+func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Signup Form"))
+}
+
+// // LOGIN FORM ////
+func (app *application) LoginForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Login Form"))
 }

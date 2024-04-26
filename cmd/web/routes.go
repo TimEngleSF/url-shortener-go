@@ -11,6 +11,10 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /{$}", app.home)
 	mux.HandleFunc("GET /ping", app.Ping)
 	mux.HandleFunc("POST /link/new", app.LinkPost)
+
+	mux.HandleFunc("GET /signup", app.SignUpForm)
+	mux.HandleFunc("GET /login", app.LoginForm)
+
 	mux.HandleFunc("GET /", app.LinkRedirect)
 
 	return app.logRequest(mux)
