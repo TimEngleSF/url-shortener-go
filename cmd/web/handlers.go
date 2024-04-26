@@ -132,6 +132,13 @@ func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
+type userAddForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) SignUpPost(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	data := app.newTemplateData(r)
@@ -141,12 +148,12 @@ func (app *application) SignUpPost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, r, http.StatusBadRequest)
 	}
 
-	name := r.PostForm.Get("name")
-	email := r.PostForm.Get("email")
-	password := r.PostForm.Get("password")
+	var form userAddForm
+
+	err = app.formDecoder.Decode(&form, r.PostForm)
 
 	fmt.Println(user, data)
-	fmt.Println(name, email, password)
+	fmt.Println(form.Name, form.Email, form.Password)
 }
 
 // // LOGIN FORM ////
