@@ -1,0 +1,10 @@
+{{ define "main" }}
+<form id="signUpForm" hx-post="/user/add" hx-target="body" hx-swap="innerHTML">
+    <label for="name">Name:</label>
+    <input type="text" id="nameInput" name="name" />
+    <label for="email">Email:</label>
+    <input type="text" id="emailInput" name="email" />
+    <label for="email">Password:</label>
+    <input type="password" id="passwordInput" name="password" />
+</form>
+{{ end }}

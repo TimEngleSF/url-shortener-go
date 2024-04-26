@@ -1,4 +1,4 @@
-{{ define "form"  }}
+{{ define "main"  }}
 <form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML">
     {{ if .Validation }}
         <label>{{ .Validation.url }}</label>
