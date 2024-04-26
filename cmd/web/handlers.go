@@ -112,7 +112,8 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 //
 // // SIGNUP FORM ////
 func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Signup Form"))
+	data := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
 // // LOGIN FORM ////
