@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"net/mail"
-	"net/url"
 	"runtime/debug"
 	"time"
 )
@@ -49,14 +47,4 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	w.WriteHeader(status)
 
 	buf.WriteTo(w)
-}
-
-func isValidUrl(input string) bool {
-	u, err := url.ParseRequestURI(input)
-	return err == nil && u.Scheme != "" && u.Host != ""
-}
-
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
 }

@@ -15,6 +15,7 @@ type templateData struct {
 	Link        *models.Link
 	Validation  map[string]string
 	QRImgPath   string
+	Form        any
 }
 
 /* TEMPLATE FUNCTIONS */

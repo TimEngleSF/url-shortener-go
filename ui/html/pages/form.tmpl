@@ -1,12 +1,12 @@
 {{ define "main"  }}
 <form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML">
-    {{ if .Validation }}
-        <label>{{ .Validation.url }}</label>
+    {{ if .Form.FieldErrors.url }}
+        <label>{{ .Form.FieldErrors.url }}</label>
         <input
             type="text"
             name="link"
             id="linkInput"
-            value="{{ .Link.RedirectUrl }}"
+            value="{{ .Form.Link.RedirectUrl }}"
             autofocus
             onfocus="this.select();"
         />

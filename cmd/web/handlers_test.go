@@ -109,7 +109,7 @@ func TestLinkPost(t *testing.T) {
 			redirectURL: "google",
 			wantSuffix:  "",
 			displayText: []string{
-				"Invalid Url: Be sure to include",
+				"Invalid URL: Be sure to include",
 				"google",
 			},
 			wantCode: http.StatusOK,
