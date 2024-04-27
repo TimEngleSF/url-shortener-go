@@ -7,20 +7,24 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/db"
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	"github.com/alexedwards/scs/pgxstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 )
 
 type application struct {
-	Postgres      *db.Postgres
-	link          models.LinkModelInterface
-	logger        *slog.Logger
-	templateCache map[string]*template.Template
-	qr            qr.QRCodeInterface
-	formDecoder   *form.Decoder
+	Postgres       *db.Postgres
+	link           models.LinkModelInterface
+	logger         *slog.Logger
+	templateCache  map[string]*template.Template
+	qr             qr.QRCodeInterface
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -66,15 +70,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	// FORM DECODER
 	formDecoder := form.NewDecoder()
 
+	// SESSION MANAGER
+	sessionManager := scs.New()
+	sessionManager.Store = pgxstore.New(Postgres.DB)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
-		Postgres:      &Postgres,
-		link:          &models.LinkModel{DB: Postgres.DB},
-		logger:        logger,
-		templateCache: templateCache,
-		qr:            &qr.QRCode{},
-		formDecoder:   formDecoder,
+		Postgres:       &Postgres,
+		link:           &models.LinkModel{DB: Postgres.DB},
+		logger:         logger,
+		templateCache:  templateCache,
+		qr:             &qr.QRCode{},
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 	logger.Info("starting server", "addr", *addr)
 
