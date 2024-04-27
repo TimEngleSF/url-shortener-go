@@ -9,9 +9,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models/mocks"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 )
 
@@ -22,12 +24,18 @@ func newTestApplication(t *testing.T) *application {
 	}
 
 	formDecoder := form.NewDecoder()
+
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
+
 	return &application{
-		logger:        slog.New(slog.NewTextHandler(io.Discard, nil)),
-		templateCache: templateCache,
-		link:          &mocks.LinkMock{},
-		qr:            &qr.QRCodeMock{},
-		formDecoder:   formDecoder,
+		logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		templateCache:  templateCache,
+		link:           &mocks.LinkMock{},
+		qr:             &qr.QRCodeMock{},
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 }
 

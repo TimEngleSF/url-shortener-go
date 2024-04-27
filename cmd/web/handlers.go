@@ -121,6 +121,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	data.QRImgPath = qrPath
 
 	// Render the form template with the short URL
+	data.Flash = "Link successfully created!"
 	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }
 

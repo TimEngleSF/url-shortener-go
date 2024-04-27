@@ -17,6 +17,7 @@ type templateData struct {
 	QRImgPath       string
 	Form            any
 	IsAuthenticated bool
+	Flash           string
 }
 
 /* TEMPLATE FUNCTIONS */
