@@ -128,7 +128,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 // ////////////////////// USERS ////////////////////////
 //
 // // SIGNUP FORM ////
-func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
@@ -140,7 +140,7 @@ type userAddForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) SignUpPost(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	data := app.newTemplateData(r)
 
