@@ -158,6 +158,16 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // // LOGIN FORM ////
-func (app *application) LoginForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Login Form"))
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Display user login form")
+}
+
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Autenticate + login user")
+}
+
+//// LOGOUT FORM ////
+
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Logout user")
 }
