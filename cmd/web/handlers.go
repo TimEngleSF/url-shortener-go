@@ -130,6 +130,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 // // SIGNUP FORM ////
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = userAddForm{}
 	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
@@ -141,20 +142,27 @@ type userAddForm struct {
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	data := app.newTemplateData(r)
-
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest)
-	}
-
 	var form userAddForm
 
-	err = app.formDecoder.Decode(&form, r.PostForm)
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(user, data)
-	fmt.Println(form.Name, form.Email, form.Password)
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Name, 3), "name", "Name must be at least 3 characters long")
+	form.CheckField(validator.MaxChars(form.Name, 20), "name", "Name must be 20 characters or less")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.IsValidEmail(form.Email), "email", "This is not a valid email")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "Password must be at least 8 characters long")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+	}
 }
 
 // // LOGIN FORM ////
