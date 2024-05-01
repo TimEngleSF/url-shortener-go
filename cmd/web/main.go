@@ -20,6 +20,7 @@ import (
 type application struct {
 	Postgres       *db.Postgres
 	link           models.LinkModelInterface
+	user           models.UserModelInterface
 	logger         *slog.Logger
 	templateCache  map[string]*template.Template
 	qr             qr.QRCodeInterface
@@ -81,6 +82,7 @@ func main() {
 	app := &application{
 		Postgres:       &Postgres,
 		link:           &models.LinkModel{DB: Postgres.DB},
+		user:           &models.UserModel{DB: Postgres.DB},
 		logger:         logger,
 		templateCache:  templateCache,
 		qr:             &qr.QRCode{},

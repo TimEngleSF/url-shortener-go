@@ -162,7 +162,24 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		data := app.newTemplateData(r)
 		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		return
 	}
+
+	err = app.user.Insert(r.Context(), form.Name, form.Email, form.Password)
+	if err != nil {
+		data := app.newTemplateData(r)
+		data.Form = form
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.AddFieldError("email", "Email already in use")
+			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		} else {
+			data.ErrorMsg = "Error creating account"
+			app.render(w, r, http.StatusInternalServerError, "signup.tmpl", data)
+		}
+		return
+	}
+
+	// TODO: Render login page
 }
 
 // // LOGIN FORM ////

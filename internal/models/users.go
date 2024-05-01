@@ -24,23 +24,31 @@ type User struct {
 }
 
 type UserModelInterface interface {
-	Insert(name, email, password string) (*User, error)
+	Insert(ctx context.Context, name, email, password string) error
 	Authenticate(email, password string) (*User, error)
 	Get(id int) (*User, error)
 	ChangePassword(id int, currentPassword, newPassword string) error
-	Exists(email string) (bool, error)
+	Exists(ctx context.Context, email string) (bool, error)
 }
 
-func (m *UserModel) Insert(ctx context.Context, name, email, password string) (*User, error) {
+func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
 	stmt := `
   INSERT INTO users (
     name, 
     email, 
     password,
     created_at, 
-    updated_at)
-  VALUES(?,?,?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
-    returning user_id`
+    updated_at
+  ) 
+  VALUES (
+    $1, 
+    $2,
+    $3,
+    CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 
+    CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  )
+  RETURNING user_id;
+  `
 
 	var id int
 	err := m.DB.QueryRow(ctx, stmt, name, email, password).Scan(&id)
@@ -48,14 +56,15 @@ func (m *UserModel) Insert(ctx context.Context, name, email, password string) (*
 		// TODO: Check to make sure that the customized email error is returned by psql below
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			fmt.Println(pgErr.Message)
-			fmt.Println(pgErr.Code)
+			if pgErr.Code == "23505" {
+				return ErrDuplicateEmail
+			}
 		}
 
-		return nil, err
+		return err
 	}
 	fmt.Println(id)
-	return nil, nil
+	return nil
 }
 
 func (m *UserModel) Authenticate(email, password string) (*User, error) {
@@ -70,6 +79,21 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 	return nil
 }
 
-func (m *UserModel) Exists(email string) (bool, error) {
-	return false, nil
+func (m *UserModel) Exists(ctx context.Context, email string) (bool, error) {
+	stmt := `
+  SELECT 
+    EXISTS(
+      SELECT 1
+      FROM users
+      WHERE email = ?
+    )
+  `
+
+	var exists bool
+	err := m.DB.QueryRow(ctx, stmt, email).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

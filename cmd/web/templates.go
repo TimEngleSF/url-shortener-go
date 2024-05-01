@@ -18,6 +18,7 @@ type templateData struct {
 	Form            any
 	IsAuthenticated bool
 	Flash           string
+	ErrorMsg        string
 }
 
 /* TEMPLATE FUNCTIONS */
