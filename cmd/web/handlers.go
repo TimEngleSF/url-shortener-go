@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	validator "github.com/TimEngleSF/url-shortener-go/internal/validators"
@@ -158,19 +159,33 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
 	form.CheckField(validator.MinChars(form.Password, 8), "password", "Password must be at least 8 characters long")
 
+	// Init data & set form values
+	data := app.newTemplateData(r)
+	data.Form = form
+
+	// Return and display form field errors
 	if !form.Valid() {
-		data := app.newTemplateData(r)
-		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		return
 	}
 
-	err = app.user.Insert(r.Context(), form.Name, form.Email, form.Password)
-	if err != nil {
-		data := app.newTemplateData(r)
+	// Return and display err if email in use
+	exists, _ := app.user.Exists(r.Context(), form.Email)
+	if exists {
+		form.AddFieldError("email", "This Email already in use")
 		data.Form = form
+		return
+	}
+
+	// TODO: use bcrypt to hash password.
+
+	// Insert account into db
+	err = app.user.Insert(r.Context(), form.Name, strings.ToLower(form.Email), form.Password)
+	// Return and display db query errors
+	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email already in use")
+			data.Form = form
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		} else {
 			data.ErrorMsg = "Error creating account"
@@ -179,7 +194,11 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Render login page
+	// Account created successfully
+	app.sessionManager.Put(r.Context(), "flash", "Successfully created account")
+	data.Form = userAddForm{}
+
+	app.render(w, r, http.StatusCreated, "login.tmpl", data)
 }
 
 // // LOGIN FORM ////
