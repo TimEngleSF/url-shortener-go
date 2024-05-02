@@ -53,3 +53,7 @@ func IsValidEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
+
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}

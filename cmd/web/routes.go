@@ -19,10 +19,12 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /ping", dynamic.ThenFunc(app.Ping))
 	mux.Handle("POST /link/new", dynamic.ThenFunc(app.LinkPost))
 
-	mux.Handle("GET /signup", dynamic.ThenFunc(app.SignUpForm))
-	mux.Handle("POST /user/add", dynamic.ThenFunc(app.SignUpPost))
+	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
 
-	mux.Handle("GET /login", dynamic.ThenFunc(app.LoginForm))
+	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
+	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
+	mux.Handle(("POST /user/logout"), dynamic.ThenFunc(app.userLogoutPost))
 
 	mux.Handle("GET /", dynamic.ThenFunc(app.LinkRedirect))
 

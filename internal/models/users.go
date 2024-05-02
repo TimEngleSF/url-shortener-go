@@ -3,11 +3,12 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModel struct {
@@ -24,38 +25,51 @@ type User struct {
 }
 
 type UserModelInterface interface {
-	Insert(name, email, password string) (*User, error)
+	Insert(ctx context.Context, name, email, password string) error
 	Authenticate(email, password string) (*User, error)
 	Get(id int) (*User, error)
 	ChangePassword(id int, currentPassword, newPassword string) error
-	Exists(email string) (bool, error)
+	Exists(ctx context.Context, email string) (bool, error)
 }
 
-func (m *UserModel) Insert(ctx context.Context, name, email, password string) (*User, error) {
+func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
 	stmt := `
   INSERT INTO users (
     name, 
     email, 
     password,
     created_at, 
-    updated_at)
-  VALUES(?,?,?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
-    returning user_id`
+    updated_at
+  ) 
+  VALUES (
+    $1, 
+    $2,
+    $3,
+    CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 
+    CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  )
+  RETURNING user_id;
+  `
 
 	var id int
-	err := m.DB.QueryRow(ctx, stmt, name, email, password).Scan(&id)
+	lowEmail := strings.ToLower(email)
+	hashedPass, err := HashPassword(password)
 	if err != nil {
-		// TODO: Check to make sure that the customized email error is returned by psql below
+		return err
+	}
+
+	err = m.DB.QueryRow(ctx, stmt, name, lowEmail, hashedPass).Scan(&id)
+	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			fmt.Println(pgErr.Message)
-			fmt.Println(pgErr.Code)
+			if pgErr.Code == "23505" {
+				return ErrDuplicateEmail
+			}
 		}
 
-		return nil, err
+		return err
 	}
-	fmt.Println(id)
-	return nil, nil
+	return nil
 }
 
 func (m *UserModel) Authenticate(email, password string) (*User, error) {
@@ -70,6 +84,32 @@ func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) 
 	return nil
 }
 
-func (m *UserModel) Exists(email string) (bool, error) {
-	return false, nil
+func (m *UserModel) Exists(ctx context.Context, email string) (bool, error) {
+	stmt := `
+  SELECT 
+    EXISTS(
+      SELECT 1
+      FROM users
+      WHERE email = ?
+    )
+  `
+
+	var exists bool
+	lowEmail := strings.ToLower(email)
+	err := m.DB.QueryRow(ctx, stmt, lowEmail).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

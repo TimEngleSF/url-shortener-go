@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	validator "github.com/TimEngleSF/url-shortener-go/internal/validators"
@@ -128,8 +129,9 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 // ////////////////////// USERS ////////////////////////
 //
 // // SIGNUP FORM ////
-func (app *application) SignUpForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = userAddForm{}
 	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
@@ -140,24 +142,74 @@ type userAddForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) SignUpPost(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	data := app.newTemplateData(r)
-
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest)
-	}
-
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form userAddForm
 
-	err = app.formDecoder.Decode(&form, r.PostForm)
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(user, data)
-	fmt.Println(form.Name, form.Email, form.Password)
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Name, 3), "name", "Name must be at least 3 characters long")
+	form.CheckField(validator.MaxChars(form.Name, 20), "name", "Name must be 20 characters or less")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.IsValidEmail(form.Email), "email", "This is not a valid email")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "Password must be at least 8 characters long")
+
+	// Init data & set form values
+	data := app.newTemplateData(r)
+	data.Form = form
+
+	// Return and display form field errors
+	if !form.Valid() {
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		return
+	}
+
+	// Return and display err if email in use
+	exists, _ := app.user.Exists(r.Context(), form.Email)
+	if exists {
+		form.AddFieldError("email", "This Email already in use")
+		data.Form = form
+		return
+	}
+
+	// Insert account into db
+	err = app.user.Insert(r.Context(), form.Name, strings.ToLower(form.Email), form.Password)
+	// Return and display db query errors
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.AddFieldError("email", "Email already in use")
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		} else {
+			data.ErrorMsg = "Error creating account"
+			app.render(w, r, http.StatusInternalServerError, "signup.tmpl", data)
+		}
+		return
+	}
+
+	// Account created successfully
+	app.sessionManager.Put(r.Context(), "flash", "Successfully created account")
+	data.Form = userAddForm{}
+
+	app.render(w, r, http.StatusCreated, "login.tmpl", data)
 }
 
 // // LOGIN FORM ////
-func (app *application) LoginForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Login Form"))
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Display user login form")
+}
+
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Autenticate + login user")
+}
+
+//// LOGOUT FORM ////
+
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Logout user")
 }

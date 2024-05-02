@@ -1,11 +1,25 @@
 {{ define "main" }}
-<form id="signUpForm" hx-post="/user/add" hx-target="body" hx-swap="innerHTML">
+<!-- <form id="signUpForm" hx-post="/user/signup" hx-target="body" hx-swap="innerHTML"> -->
+<form id="signUpForm" method="POST" action="/user/signup" >
     <div>
         <label for="name">Name:</label>
-        <input type="text" id="nameInput" name="name" />
+        {{ with .Form.FieldErrors.name }}
+            <label class="error">{{ . }}</label>
+        {{ end }}
+        <input type="text" id="nameInput" name="name" value="{{ .Form.Name }}" />
+    </div>
+    <div>
         <label for="email">Email:</label>
-        <input type="text" id="emailInput" name="email" />
+        {{ with .Form.FieldErrors.email }}
+            <label class="error">{{ . }}</label>
+        {{ end }}
+        <input type="text" id="emailInput" name="email" value="{{ .Form.Email }}" />
+    </div>
+    <div>
         <label for="password">Password:</label>
+        {{ with .Form.FieldErrors.password }}
+            <label class="error">{{ . }}</label>
+        {{ end }}
         <input type="password" id="passwordInput" name="password" />
     </div>
     <button>Submit</button>

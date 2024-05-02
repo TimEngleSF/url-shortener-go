@@ -1,5 +1,6 @@
 {{ define "main"  }}
 <form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML">
+<!-- <form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML"> -->
     {{ if .Form.FieldErrors.url }}
         <label>{{ .Form.FieldErrors.url }}</label>
         <input
