@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -31,7 +31,7 @@ type UserModelInterface interface {
 	Exists(ctx context.Context, email string) (bool, error)
 }
 
-func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
+func (m *UserModel) Insert(ctx context.Context, name, email, hashedPassword string) error {
 	stmt := `
   INSERT INTO users (
     name, 
@@ -51,9 +51,10 @@ func (m *UserModel) Insert(ctx context.Context, name, email, password string) er
   `
 
 	var id int
-	err := m.DB.QueryRow(ctx, stmt, name, email, password).Scan(&id)
+	lowEmail := strings.ToLower(email)
+
+	err := m.DB.QueryRow(ctx, stmt, name, lowEmail, hashedPassword).Scan(&id)
 	if err != nil {
-		// TODO: Check to make sure that the customized email error is returned by psql below
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == "23505" {
@@ -63,7 +64,6 @@ func (m *UserModel) Insert(ctx context.Context, name, email, password string) er
 
 		return err
 	}
-	fmt.Println(id)
 	return nil
 }
 
@@ -90,7 +90,8 @@ func (m *UserModel) Exists(ctx context.Context, email string) (bool, error) {
   `
 
 	var exists bool
-	err := m.DB.QueryRow(ctx, stmt, email).Scan(&exists)
+	lowEmail := strings.ToLower(email)
+	err := m.DB.QueryRow(ctx, stmt, lowEmail).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
