@@ -177,8 +177,6 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: use bcrypt to hash password.
-
 	// Insert account into db
 	err = app.user.Insert(r.Context(), form.Name, strings.ToLower(form.Email), form.Password)
 	// Return and display db query errors

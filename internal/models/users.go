@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModel struct {
@@ -31,7 +32,7 @@ type UserModelInterface interface {
 	Exists(ctx context.Context, email string) (bool, error)
 }
 
-func (m *UserModel) Insert(ctx context.Context, name, email, hashedPassword string) error {
+func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
 	stmt := `
   INSERT INTO users (
     name, 
@@ -52,8 +53,12 @@ func (m *UserModel) Insert(ctx context.Context, name, email, hashedPassword stri
 
 	var id int
 	lowEmail := strings.ToLower(email)
+	hashedPass, err := HashPassword(password)
+	if err != nil {
+		return err
+	}
 
-	err := m.DB.QueryRow(ctx, stmt, name, lowEmail, hashedPassword).Scan(&id)
+	err = m.DB.QueryRow(ctx, stmt, name, lowEmail, hashedPass).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
@@ -97,4 +102,14 @@ func (m *UserModel) Exists(ctx context.Context, email string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
