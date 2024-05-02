@@ -8,6 +8,9 @@
     <input type="text" name="email" id="emailInput" value="{{ .Form.Email }}" />
   </div>
   <div>
+    {{ with .Form.FieldErrors.password }}
+      <label class="error">{{ . }}</label>
+    {{ end }}
     <label for="password">Password:</label>
     <input type="text" name="email" id="emailInput" />
   </div>
