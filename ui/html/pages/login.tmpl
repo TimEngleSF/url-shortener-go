@@ -1,0 +1,16 @@
+{{ define "main" }}
+<form method="POST" action="/user/login">
+  <div>
+    <label for="email">Email:</label>
+    {{ with .Form.FieldErrors.email }}
+        <label class="error"> {{ . }} </label>
+    {{ end }}
+    <input type="text" name="email" id="emailInput" value="{{ .Form.Email }}" />
+  </div>
+  <div>
+    <label for="password">Password:</label>
+    <input type="text" name="email" id="emailInput" />
+  </div>
+  <button>Login</button>
+</form>
+{{ end }}

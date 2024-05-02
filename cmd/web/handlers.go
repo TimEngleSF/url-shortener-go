@@ -196,12 +196,22 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "flash", "Successfully created account")
 	data.Form = userAddForm{}
 
-	app.render(w, r, http.StatusCreated, "login.tmpl", data)
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
 // // LOGIN FORM ////
+
+type userLoginForm struct {
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Display user login form")
+	data := app.newTemplateData(r)
+	data.Form = userLoginForm{}
+	app.render(w, r, http.StatusOK, "login.tmpl", data)
+	// fmt.Fprint(w, "Display user login form")
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
