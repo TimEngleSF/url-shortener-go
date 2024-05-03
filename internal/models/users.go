@@ -82,6 +82,12 @@ func (m *UserModel) Authenticate(ctx context.Context, email, password string) (*
 	err := m.DB.QueryRow(ctx, stmt, strings.ToLower(email)).
 		Scan(&user.ID, &user.Name, &user.Email, &user.HashedPassword)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return nil, ErrInvalidCredentials
+			}
+		}
 		return nil, err
 	}
 
