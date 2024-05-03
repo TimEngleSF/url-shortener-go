@@ -170,7 +170,10 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return and display err if email in use
-	exists, _ := app.user.Exists(r.Context(), form.Email)
+	exists, err := app.user.ExistsByEmail(r.Context(), form.Email)
+	if err != nil {
+		app.render(w, r, http.StatusInternalServerError, "signup.tmpl", data)
+	}
 	if exists {
 		form.AddFieldError("email", "This Email already in use")
 		data.Form = form
