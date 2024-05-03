@@ -32,9 +32,10 @@ func (app *application) clientError(w http.ResponseWriter, r *http.Request, stat
 // Returns TemplateData used to dynamically render content to HTML page
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
-		CurrentYear: time.Now().Year(),
-		Validation:  make(map[string]string),
-		Flash:       app.sessionManager.PopString(r.Context(), "flash"),
+		CurrentYear:     time.Now().Year(),
+		Validation:      make(map[string]string),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 }
 
@@ -74,4 +75,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 		return err
 	}
 	return nil
+}
+
+// Returns true if session contains "authticatedUserID" field
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
 }

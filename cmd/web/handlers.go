@@ -241,7 +241,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var status int
 		if errors.Is(err, models.ErrInvalidCredentials) {
-			data.ErrorMsg = "Email or password invalid"
+			data.ErrorMsg = "Email or password is incorrect"
 			status = http.StatusUnauthorized
 		} else {
 			data.ErrorMsg = "There was an error accessing account"
@@ -251,9 +251,17 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO:
-	// If authenticated need to authorize user & update sessionManager
-	fmt.Fprint(w, user.Email)
+	// Renew session
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		data.ErrorMsg = "There was an error updating cookies"
+		app.render(w, r, http.StatusInternalServerError, "login.tmpl", data)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", user.ID)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 //// LOGOUT FORM ////
