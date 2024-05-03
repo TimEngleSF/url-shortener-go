@@ -1,18 +1,18 @@
 {{ define "nav" }}
 <nav>
     <div>
-        <a href="/">Home</a>
+        <a href='/'>Home</a>
     </div>
     <div>
         {{ if .IsAuthenticated }}
-            <a href="/account/view">Account</a>
-            <form method="POST" action="/user/logout">
-                <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
+            <a href='/account/view'>Account</a>
+            <form method='POST' action='/user/logout'>
+                <input type='hidden' name='csrf_token' value='{{ .CSRFToken }}' />
                 <button>Logout</button>
             </form>
         {{ else }}
-            <a href="/user/signup">Sign Up</a>
-            <a href="/user/login">Login</a>
+            <a href='/user/signup'>Sign Up</a>
+            <a href='/user/login'>Login</a>
         {{ end }}
     </div>
 </nav>

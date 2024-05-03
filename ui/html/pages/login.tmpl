@@ -1,19 +1,19 @@
 {{ define "main" }}
-<form method="POST" action="/user/login">
-  <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
+<form method='POST' action='/user/login'>
+  <input type='hidden' name='csrf_token' value='{{ .CSRFToken }}' />
   <div>
-    <label for="email">Email:</label>
+    <label for='email'>Email:</label>
     {{ with .Form.FieldErrors.email }}
-        <label class="error"> {{ . }} </label>
+        <label class='error'> {{ . }} </label>
     {{ end }}
-    <input type="text" name="email" id="emailInput" value="{{ .Form.Email }}" />
+    <input type='text' name='email' id='emailInput' value='{{ .Form.Email }}' />
   </div>
   <div>
-    <label for="password">Password:</label>
+    <label for='password'>Password:</label>
     {{ with .Form.FieldErrors.password }}
-      <label class="error">{{ . }}</label>
+      <label class='error'>{{ . }}</label>
     {{ end }}
-    <input type="password" name="password" id="password" />
+    <input type='password' name='password' id='password' />
   </div>
   <button>Login</button>
 </form>
