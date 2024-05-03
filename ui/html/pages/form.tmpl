@@ -1,61 +1,78 @@
 {{ define "main"  }}
-<!-- <form id="linkForm" hx-post="/link/new" hx-target="body" hx-swap="innerHTML"> -->
-<form id="linkForm" action="/link/new" method="POST"> 
-    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
+<!-- <form id='linkForm' hx-post='/link/new' hx-target='body' hx-swap='innerHTML'> -->
+<form id='linkForm' action='/link/new' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{ .CSRFToken }}'/>
     {{ if .Form.FieldErrors.url }}
-        <label>{{ .Form.FieldErrors.url }}</label>
-        <input
-            type="text"
-            name="link"
-            id="linkInput"
-            value="{{ .Form.Link.RedirectUrl }}"
-            autofocus
-            onfocus="this.select();"
-        />
-    {{ else }} 
-    {{ if .Link  }}
-        {{ template "shortLinkInput" . }}
+    <label>{{ .Form.FieldErrors.url }}</label>
+    <input
+        type='text'
+        name='link'
+        id='linkInput'
+        value='{{ .Form.Link.RedirectUrl }}'
+        autofocus
+        onfocus='this.select();'
+    />
     {{ else }}
-        {{ template "defaultInput" . }}
-    {{ end }} <!-- end if .Link -->
-    {{ end }} <!-- end if .Validation -->
+    {{ if .Link  }}
+    {{ template "shortLinkInput" . }}
+    {{ else }}
+    {{ template "defaultInput" . }}
+    {{ end }}
+    <!-- end if .Link -->
+    {{ end }}
+    <!-- end if .Validation -->
     <div>
         <ul>
-        {{ if (and (.Link ) (gt  (len .Link.ShortUrl) 0)) }}
+            {{ if (and (.Link ) (gt  (len .Link.ShortUrl) 0)) }}
             {{ template "buttonList" . }}
-        {{ else }}
+            {{ else }}
             {{ template "submitButton" . }}
-        {{ end }}
+            {{
+                end
+            }}
         </ul>
     </div>
-    {{ with .QRImgPath }}
-        {{ template "qrCode" . }}
+    {{ with.QRImgPath }}
+    {{ template "qrCode" . }}
     {{ end }}
 </form>
 {{ end }}
 
-
 {{ block "defaultInput" .}}
-  <input type="text" name="link" id="linkInput" autofocus placeholder="https://example.com" />
+<input
+    type='text'
+    name='link'
+    id='linkInput'
+    autofocus
+    placeholder='https://example.com'
+/>
 {{ end }}
 
-{{block "shortLinkInput" .}} 
-<input type="text" name="link" value="{{ .Link.ShortUrl }}" id="linkInput" disabled/>
+{{block "shortLinkInput" .}}
+<input
+    type='text'
+    name='link'
+    value='{{ .Link.ShortUrl }}'
+    id='linkInput'
+    disabled
+/>
 <!-- TODO: Create copy, share, and reset button -->
-{{end}}
+{{ end }}
 
 {{ block "submitButton" . }}
-<li><button type="submit">Get Link</button></li>
+<li><button type='submit'>Get Link</button></li>
 {{ end }}
 
 {{ block "buttonList" . }}
-<li><button type="button" id="copyButton">Copy</button></li>
-<li><button type="button" id="shareButton">Share</button></li> <!-- Use alpinejs to create a modal or popup of buttons to Social media shares -->
-<li><button type="button" id="qrButton">QR</button></li>       <!-- Use alpine to show qrCode -->
-<li><button type="button" id="resetButton">Reset</button></li> <!-- Swap body for form at GET "/new" -->
+<li><button type='button' id='copyButton'>Copy</button></li>
+<li><button type='button' id='shareButton'>Share</button></li>
+<!-- Use alpinejs to create a modal or popup of buttons to Social media shares -->
+<li><button type='button' id='qrButton'>QR</button></li>
+<!-- Use alpine to show qrCode -->
+<li><button type='button' id='resetButton'>Reset</button></li>
+<!-- Swap body for form at GET '/new' -->
 {{ end }}
 
 {{ block "qrCode" . }}
-<img src="{{ . }}" alt="QR Code" />
+<img src='{{ . }}' alt='QR Code' />
 {{ end }}
-

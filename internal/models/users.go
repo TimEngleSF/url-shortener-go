@@ -28,8 +28,8 @@ type User struct {
 type UserModelInterface interface {
 	Insert(ctx context.Context, name, email, password string) error
 	Authenticate(ctx context.Context, email, password string) (*User, error)
-	Get(id int) (*User, error)
-	ChangePassword(id int, currentPassword, newPassword string) error
+	Get(ctx context.Context, id int) (*User, error)
+	ChangePassword(ctx context.Context, id int, currentPassword, newPassword string) error
 	ExistsByID(ctx context.Context, id int) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 }
@@ -101,11 +101,11 @@ func (m *UserModel) Authenticate(ctx context.Context, email, password string) (*
 	return &user, nil
 }
 
-func (m *UserModel) Get(id int) (*User, error) {
+func (m *UserModel) Get(ctx context.Context, id int) (*User, error) {
 	return nil, nil
 }
 
-func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) error {
+func (m *UserModel) ChangePassword(ctx context.Context, id int, currentPassword, newPassword string) error {
 	return nil
 }
 
