@@ -26,7 +26,7 @@ type User struct {
 
 type UserModelInterface interface {
 	Insert(ctx context.Context, name, email, password string) error
-	Authenticate(email, password string) (*User, error)
+	Authenticate(ctx context.Context, email, password string) (*User, error)
 	Get(id int) (*User, error)
 	ChangePassword(id int, currentPassword, newPassword string) error
 	Exists(ctx context.Context, email string) (bool, error)
@@ -72,8 +72,25 @@ func (m *UserModel) Insert(ctx context.Context, name, email, password string) er
 	return nil
 }
 
-func (m *UserModel) Authenticate(email, password string) (*User, error) {
-	return nil, nil
+func (m *UserModel) Authenticate(ctx context.Context, email, password string) (*User, error) {
+	stmt := `
+  SELECT user_id, name, email, password
+  FROM users
+  WHERE $1 = email
+  `
+	var user User
+	err := m.DB.QueryRow(ctx, stmt, strings.ToLower(email)).
+		Scan(&user.ID, &user.Name, &user.Email, &user.HashedPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	validPass := CheckPasswordHash(password, string(user.HashedPassword))
+	if !validPass {
+		return nil, ErrInvalidCredentials
+	}
+
+	return &user, nil
 }
 
 func (m *UserModel) Get(id int) (*User, error) {
