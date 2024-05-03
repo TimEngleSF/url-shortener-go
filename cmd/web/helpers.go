@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 // Displays a text error to the client and logs error
@@ -36,6 +37,7 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 		Validation:      make(map[string]string),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r),
 	}
 }
 

@@ -1,6 +1,7 @@
 {{ define "main" }}
 <!-- <form id="signUpForm" hx-post="/user/signup" hx-target="body" hx-swap="innerHTML"> -->
 <form id="signUpForm" method="POST" action="/user/signup" >
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
     <div>
         <label for="name">Name:</label>
         {{ with .Form.FieldErrors.name }}
