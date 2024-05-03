@@ -12,10 +12,12 @@ type Validator struct {
 	FieldErrors map[string]string
 }
 
+// If there are any fields on the FieldErrors map will return false
 func (v *Validator) Valid() bool {
 	return len(v.FieldErrors) == 0
 }
 
+// Add an error field to the FieldError map
 func (v *Validator) AddFieldError(key, message string) {
 	if v.FieldErrors == nil {
 		v.FieldErrors = make(map[string]string)
@@ -26,6 +28,7 @@ func (v *Validator) AddFieldError(key, message string) {
 	}
 }
 
+// Add a key and value to the FieldErrors map if validator param function is false
 func (v *Validator) CheckField(ok bool, key, message string) {
 	if !ok {
 		v.AddFieldError(key, message)
