@@ -30,7 +30,7 @@ func TestHome(t *testing.T) {
 	defer ts.Close()
 	code, _, body := ts.get(t, "/")
 
-	button := `<li><button type="submit">Get Link</button></li>`
+	button := `<li><button type='submit'>Get Link</button></li>`
 
 	assert.Equal(t, code, http.StatusOK)
 	assert.StringContains(t, body, button)
@@ -129,11 +129,18 @@ func TestLinkPost(t *testing.T) {
 			wantCode:    http.StatusCreated,
 			qrCalled:    true,
 		},
+		{
+			name:        "Invalid CSRF Token",
+			redirectURL: "https://yahoo.com",
+			csrfToken:   "wrongToken",
+			displayText: []string{"Bad"},
+			wantCode:    http.StatusBadRequest,
+			qrCalled:    false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Logf("csrtf token %s", tt.csrfToken)
 			form := url.Values{}
 			form.Add("link", tt.redirectURL)
 			form.Add("csrf_token", tt.csrfToken)
@@ -156,8 +163,8 @@ func TestUserSignup(t *testing.T) {
 	const (
 		validName     = "Bob"
 		validPassword = "validPa$$word"
-		validEmail    = "bob@example.com"
-		formTag       = "<form action='/user/signup' method='POST' novalidate>"
+		validEmail    = "bob@email.com"
+		formTag       = `<form id='signUpForm' method='POST' action='/user/signup' novalidate >`
 	)
 
 	tests := []struct {
@@ -233,7 +240,7 @@ func TestUserSignup(t *testing.T) {
 		{
 			name:         "Duplicate email",
 			userName:     validName,
-			userEmail:    "dupe@example.com",
+			userEmail:    "dupe@email.com",
 			userPassword: validPassword,
 			csrfToken:    validCSRFToken,
 			wantCode:     http.StatusUnprocessableEntity,

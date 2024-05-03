@@ -56,11 +56,10 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 
 	ts.Client().Jar = jar
 
-	/*
-		ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
-	*/
+	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
 	return &testServer{ts}
 }
 
@@ -98,10 +97,10 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (c
 	return rs.StatusCode, rs.Header, body
 }
 
-var csrfTokeRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'/>`)
+var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'/>`)
 
 func extractCSRFToken(t *testing.T, body string) string {
-	matches := csrfTokeRX.FindStringSubmatch(body)
+	matches := csrfTokenRX.FindStringSubmatch(body)
 	if len(matches) < 2 {
 		t.Fatal("no csrf token found in body")
 	}

@@ -9,11 +9,19 @@ import (
 type UserMock struct{}
 
 func (m *UserMock) Insert(ctx context.Context, name, email, password string) error {
-	return nil
+	switch email {
+	case "dupe@email.com":
+		return models.ErrDuplicateEmail
+	default:
+		return nil
+	}
 }
 
 func (m *UserMock) Authenticate(ctx context.Context, email, password string) (*models.User, error) {
-	return nil, nil
+	if email == "john@email.com" && password == "pa$$word" {
+		return &models.User{ID: 1}, nil
+	}
+	return &models.User{ID: 0}, models.ErrInvalidCredentials
 }
 
 func (m *UserMock) Get(ctx context.Context, id int) (*models.User, error) {
@@ -25,9 +33,19 @@ func (m *UserMock) ChangePassword(ctx context.Context, id int, currentPassword, 
 }
 
 func (m *UserMock) ExistsByID(ctx context.Context, id int) (bool, error) {
-	return false, nil
+	switch id {
+	case 1:
+		return true, nil
+	default:
+		return false, nil
+	}
 }
 
 func (m *UserMock) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	return false, nil
+	switch email {
+	case "john@email.com":
+		return true, nil
+	default:
+		return false, nil
+	}
 }
