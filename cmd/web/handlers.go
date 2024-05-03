@@ -213,7 +213,47 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Autenticate + login user")
+	data := app.newTemplateData(r)
+	var form userLoginForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		data.ErrorMsg = "There was an error logging in"
+		app.render(w, r, http.StatusInternalServerError, "login.tmpl", data)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.IsValidEmail(form.Email), "email", "This is not a valid email")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "Password must be at least 8 characters long")
+
+	data.Form = form
+
+	if !form.Valid() {
+		app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+		return
+	}
+
+	// Authenticate user
+	user, err := app.user.Authenticate(r.Context(), form.Email, form.Password)
+	// Return and display error if credentials are invalid or err querying db
+	if err != nil {
+		var status int
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			data.ErrorMsg = "Email or password invalid"
+			status = http.StatusUnauthorized
+		} else {
+			data.ErrorMsg = "There was an error accessing account"
+			status = http.StatusInternalServerError
+		}
+		app.render(w, r, status, "login.tmpl", data)
+		return
+	}
+
+	// TODO:
+	// If authenticated need to authorize user & update sessionManager
+	fmt.Fprint(w, user.Email)
 }
 
 //// LOGOUT FORM ////
