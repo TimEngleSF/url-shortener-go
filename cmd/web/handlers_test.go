@@ -266,3 +266,51 @@ func TestUserSignup(t *testing.T) {
 		})
 	}
 }
+
+func TestUserLoginPost(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_, _, body := ts.get(t, "/user/login")
+	validCSRFToken := extractCSRFToken(t, body)
+	t.Logf("Calid CSRF: %q", validCSRFToken)
+
+	tests := []struct {
+		name         string
+		userEmail    string
+		userPassword string
+		csrfToken    string
+		wantCode     int
+	}{
+		{
+			name:         "Valid login -- john@email.com",
+			userEmail:    "john@email.com",
+			userPassword: "pa$$word",
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusSeeOther,
+		},
+		{
+			name:         "Valid login -- John@email.com",
+			userEmail:    "john@email.com",
+			userPassword: "pa$$word",
+			csrfToken:    validCSRFToken,
+			wantCode:     http.StatusSeeOther,
+		},
+		// TODO: Write test cases for unsuccessful logins
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+
+			form.Add("email", tt.userEmail)
+			form.Add("password", tt.userPassword)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := ts.postForm(t, "/user/login", form)
+			fmt.Println(code, body)
+			assert.Equal(t, code, tt.wantCode)
+		})
+	}
+}

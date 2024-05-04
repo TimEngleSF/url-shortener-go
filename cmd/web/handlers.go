@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -49,8 +48,8 @@ type linkCreateForm struct {
 func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	var link models.Link
 	var err error
+
 	data := app.newTemplateData(r)
-	fmt.Println("check")
 	err = r.ParseForm()
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest)
