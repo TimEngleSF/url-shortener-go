@@ -19,6 +19,7 @@ type templateData struct {
 	IsAuthenticated bool
 	Flash           string
 	ErrorMsg        string
+	CSRFToken       string
 }
 
 /* TEMPLATE FUNCTIONS */

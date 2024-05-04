@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -24,8 +25,12 @@ type application struct {
 	logger         *slog.Logger
 	templateCache  map[string]*template.Template
 	qr             qr.QRCodeInterface
-	formDecoder    *form.Decoder
+	formDecoder    formDecoderInterface
 	sessionManager *scs.SessionManager
+}
+
+type formDecoderInterface interface {
+	Decode(v interface{}, values url.Values) (err error)
 }
 
 func main() {

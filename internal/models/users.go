@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -26,10 +27,11 @@ type User struct {
 
 type UserModelInterface interface {
 	Insert(ctx context.Context, name, email, password string) error
-	Authenticate(email, password string) (*User, error)
-	Get(id int) (*User, error)
-	ChangePassword(id int, currentPassword, newPassword string) error
-	Exists(ctx context.Context, email string) (bool, error)
+	Authenticate(ctx context.Context, email, password string) (*User, error)
+	Get(ctx context.Context, id int) (*User, error)
+	ChangePassword(ctx context.Context, id int, currentPassword, newPassword string) error
+	ExistsByID(ctx context.Context, id int) (bool, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
 }
 
 func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
@@ -72,36 +74,57 @@ func (m *UserModel) Insert(ctx context.Context, name, email, password string) er
 	return nil
 }
 
-func (m *UserModel) Authenticate(email, password string) (*User, error) {
+func (m *UserModel) Authenticate(ctx context.Context, email, password string) (*User, error) {
+	stmt := `
+  SELECT user_id, name, email, password
+  FROM users
+  WHERE $1 = email
+  `
+	var user User
+	err := m.DB.QueryRow(ctx, stmt, strings.ToLower(email)).
+		Scan(&user.ID, &user.Name, &user.Email, &user.HashedPassword)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return nil, ErrInvalidCredentials
+			}
+		}
+		return nil, err
+	}
+
+	validPass := CheckPasswordHash(password, string(user.HashedPassword))
+	if !validPass {
+		return nil, ErrInvalidCredentials
+	}
+
+	return &user, nil
+}
+
+func (m *UserModel) Get(ctx context.Context, id int) (*User, error) {
 	return nil, nil
 }
 
-func (m *UserModel) Get(id int) (*User, error) {
-	return nil, nil
-}
-
-func (m *UserModel) ChangePassword(id int, currentPassword, newPassword string) error {
+func (m *UserModel) ChangePassword(ctx context.Context, id int, currentPassword, newPassword string) error {
 	return nil
 }
 
-func (m *UserModel) Exists(ctx context.Context, email string) (bool, error) {
-	stmt := `
-  SELECT 
-    EXISTS(
-      SELECT 1
-      FROM users
-      WHERE email = ?
-    )
-  `
-
-	var exists bool
-	lowEmail := strings.ToLower(email)
-	err := m.DB.QueryRow(ctx, stmt, lowEmail).Scan(&exists)
+func (m *UserModel) ExistsByID(ctx context.Context, id int) (bool, error) {
+	doesExist, err := exists(m.DB, ctx, id)
 	if err != nil {
 		return false, err
 	}
 
-	return exists, nil
+	return doesExist, nil
+}
+
+func (m *UserModel) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	lowEmail := strings.ToLower(email)
+	doessExist, err := exists(m.DB, ctx, lowEmail)
+	if err != nil {
+		return false, err
+	}
+	return doessExist, nil
 }
 
 func HashPassword(password string) (string, error) {
@@ -112,4 +135,34 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+// Check if there is a row based on an email or id value
+func exists(db *pgxpool.Pool, ctx context.Context, value interface{}) (bool, error) {
+	var targetColumn string
+	switch value.(type) {
+	case int:
+		targetColumn = "user_id"
+	case string:
+		targetColumn = "email"
+	default:
+		return false, errors.New("value argument invalid type")
+	}
+
+	stmt := fmt.Sprintf(
+		`SELECT 
+    EXISTS(
+      SELECT 1
+      FROM users
+      WHERE %s = $1 
+    )
+`, targetColumn)
+
+	var exists bool
+	err := db.QueryRow(ctx, stmt, value).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }
