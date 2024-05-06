@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"html/template"
+	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -13,9 +14,11 @@ import (
 	"github.com/TimEngleSF/url-shortener-go/internal/db"
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	S3 "github.com/TimEngleSF/url-shortener-go/internal/s3"
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/joho/godotenv"
 )
 
 type application struct {
@@ -27,6 +30,7 @@ type application struct {
 	qr             qr.QRCodeInterface
 	formDecoder    formDecoderInterface
 	sessionManager *scs.SessionManager
+	s3             S3.S3Interface
 }
 
 type formDecoderInterface interface {
@@ -34,6 +38,11 @@ type formDecoderInterface interface {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	addr := flag.String("addr", "8080", "HTTP networking address")
 	dbHost := flag.String("dbhost", "localhost", "PSQL database host")
 	dbName := flag.String("dbname", "url-shortener", "PSQL database name")
@@ -64,7 +73,7 @@ func main() {
 	Postgres.Dsn = &dsn
 
 	/* OPEN DB */
-	err := Postgres.OpenDb()
+	err = Postgres.OpenDb()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
@@ -84,6 +93,13 @@ func main() {
 	sessionManager.Store = pgxstore.New(Postgres.DB)
 	sessionManager.Lifetime = 12 * time.Hour
 
+	// S3
+	s3, err := S3.NewS3Client()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
 		Postgres:       &Postgres,
 		link:           &models.LinkModel{DB: Postgres.DB},
@@ -93,6 +109,7 @@ func main() {
 		qr:             &qr.QRCode{},
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		s3:             &S3.S3{Client: s3},
 	}
 	logger.Info("starting server", "addr", *addr)
 
