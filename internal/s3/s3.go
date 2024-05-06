@@ -11,7 +11,7 @@ import (
 )
 
 type S3Interface interface {
-	UploadFile(ctx context.Context, key string, img []byte) error
+	UploadFile(ctx context.Context, key string, img []byte) (string, error)
 }
 
 type S3 struct {
@@ -41,7 +41,7 @@ func NewS3Client() (*s3.Client, error) {
 	return client, nil
 }
 
-func (s *S3) UploadFile(ctx context.Context, key string, img []byte) error {
+func (s *S3) UploadFile(ctx context.Context, key string, img []byte) (string, error) {
 	r := bytes.NewReader(img)
 	_, err := s.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &bucket,
@@ -49,7 +49,10 @@ func (s *S3) UploadFile(ctx context.Context, key string, img []byte) error {
 		Body:   r,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+
+	objectURL := "https://" + bucket + ".s3-" + region + ".amazonaws.com/" + key
+
+	return objectURL, nil
 }
