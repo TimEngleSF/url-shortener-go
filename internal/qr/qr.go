@@ -8,12 +8,13 @@ import (
 )
 
 type QRCodeInterface interface {
-	CreateMedium(url string) (path string, err error)
+	CreateMedium(url string) ([]byte, error)
+	CreateMediumFile(url string) (path string, err error)
 }
 
 type QRCode struct{}
 
-func (qr *QRCode) CreateMedium(url string) (path string, err error) {
+func (qr *QRCode) CreateMediumFile(url string) (path string, err error) {
 	id := uuid.New()
 	path = "./ui/static/qr/" + id.String() + ".png"
 	err = qrcode.WriteFile(url, qrcode.Medium, 256, path)
@@ -23,4 +24,13 @@ func (qr *QRCode) CreateMedium(url string) (path string, err error) {
 
 	path, _ = strings.CutPrefix(path, "./ui")
 	return path, nil
+}
+
+func (qr *QRCode) CreateMedium(url string) ([]byte, error) {
+	img, err := qrcode.Encode(url, qrcode.Medium, 256)
+	if err != nil {
+		return nil, err
+	}
+
+	return img, nil
 }

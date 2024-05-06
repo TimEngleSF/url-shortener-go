@@ -15,6 +15,7 @@ import (
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models/mocks"
 	"github.com/TimEngleSF/url-shortener-go/internal/qr"
+	S3 "github.com/TimEngleSF/url-shortener-go/internal/s3"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 )
@@ -39,6 +40,7 @@ func newTestApplication(t *testing.T) *application {
 		qr:             &qr.QRCodeMock{},
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		s3:             &S3.S3Mock{},
 	}
 }
 

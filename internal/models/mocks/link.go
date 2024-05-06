@@ -14,12 +14,13 @@ var mockLink = models.Link{
 	RedirectUrl: "https://google.com",
 	Suffix:      "abc123",
 	CreatedAt:   time.Now(),
+	QRUrl:       "someS3Url",
 	ShortUrl:    "",
 }
 
 type LinkMock struct{}
 
-func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix string) (models.Link, error) {
+func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix, qrUrl string) (models.Link, error) {
 	l := models.Link{
 		ID:          2,
 		RedirectUrl: redirectUrl,
