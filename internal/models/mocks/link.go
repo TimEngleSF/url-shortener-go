@@ -20,7 +20,7 @@ var mockLink = models.Link{
 
 type LinkMock struct{}
 
-func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix, qrUrl string) (models.Link, error) {
+func (m *LinkMock) Insert(ctx context.Context, redirectUrl, suffix, qrUrl, host string) (models.Link, error) {
 	l := models.Link{
 		ID:          2,
 		RedirectUrl: redirectUrl,
@@ -47,9 +47,10 @@ func (m *LinkMock) GetBySuffix(ctx context.Context, suffix string) (models.Link,
 	}
 }
 
-func (m *LinkMock) GetByURL(ctx context.Context, url string) (models.Link, error) {
+func (m *LinkMock) GetByURL(ctx context.Context, url, host string) (models.Link, error) {
 	switch url {
 	case "https://google.com":
+		mockLink.ShortUrl, _ = mockLink.CreateShortUrl(host)
 		return mockLink, nil
 	default:
 		return models.Link{}, models.ErrNoRecord

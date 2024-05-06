@@ -26,19 +26,28 @@ type Link struct {
 }
 
 type LinkModelInterface interface {
-	Insert(ctx context.Context, redirectUrl, suffix, qrUrl string) (Link, error)
+	Insert(ctx context.Context, redirectUrl, suffix, qrUrl, host string) (Link, error)
 	GetBySuffix(ctx context.Context, suffix string) (Link, error)
-	GetByURL(ctx context.Context, url string) (Link, error)
+	GetByURL(ctx context.Context, url, host string) (Link, error)
 	URLExists(urlStr string) (bool, error)
 }
 
-func (m *LinkModel) Insert(ctx context.Context, redirectUrl, suffix, qrUrl string) (Link, error) {
-	stmt := `INSERT INTO links (redirect_url, suffix, qr_url) VALUES ($1, $2, $3)`
-	_, err := m.DB.Exec(ctx, stmt, redirectUrl, suffix, qrUrl)
+func (m *LinkModel) Insert(ctx context.Context, redirectUrl, suffix, qrUrl, host string) (Link, error) {
+	stmt := `INSERT INTO links (redirect_url, suffix, qr_url) VALUES ($1, $2, $3) RETURNING link_id;`
+
+	var id int
+	err := m.DB.QueryRow(ctx, stmt, redirectUrl, suffix, qrUrl).Scan(&id)
 	if err != nil {
 		return Link{}, err
 	}
-	return Link{RedirectUrl: redirectUrl, Suffix: suffix}, nil
+
+	link := Link{ID: id, RedirectUrl: redirectUrl, Suffix: suffix, QRUrl: qrUrl}
+	link.ShortUrl, err = link.CreateShortUrl(host)
+	if err != nil {
+		return Link{}, err
+	}
+
+	return link, nil
 }
 
 func (m *LinkModel) SuffixExists(suffix string) (bool, error) {
@@ -73,7 +82,7 @@ func (m *LinkModel) GetBySuffix(ctx context.Context, suffix string) (Link, error
 	return link, nil
 }
 
-func (m *LinkModel) GetByURL(ctx context.Context, url string) (Link, error) {
+func (m *LinkModel) GetByURL(ctx context.Context, url, host string) (Link, error) {
 	var link Link
 	stmt := `SELECT link_id, redirect_url, suffix, qr_url, created_at FROM links
   WHERE redirect_url = $1`
@@ -85,6 +94,12 @@ func (m *LinkModel) GetByURL(ctx context.Context, url string) (Link, error) {
 			return Link{}, err
 		}
 	}
+
+	link.ShortUrl, err = link.CreateShortUrl(host)
+	if err != nil {
+		return Link{}, err
+	}
+
 	return link, nil
 }
 
