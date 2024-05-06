@@ -7,6 +7,7 @@ import (
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
 	validator "github.com/TimEngleSF/url-shortener-go/internal/validators"
+	"github.com/google/uuid"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -74,25 +75,45 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the URL already exists in the database
+	// FIND URL IN DB
 	link, err = app.link.GetByURL(r.Context(), linkStr)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			// If the URL does not exist, create a new Link struct
-			// in the next block of code
+			// If the URL does not exist, create a new Link struct in next block
 		} else {
 			app.serverError(w, r, err)
 			return
 		}
 	}
 
-	// If the URL does not exist in the database, create a new Link struct
+	// URL NOT IN DB
 	if link.Suffix == "" {
 		link = models.Link{RedirectUrl: linkStr}
 		link.Suffix = models.CreateSuffix()
 
-		// Insert the link into the database
-		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix)
+		// Create a short URL & QR code
+		shortUrl, err := link.CreateShortUrl(r.Host)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		link.ShortUrl = shortUrl
+		img, err := app.qr.CreateMedium(shortUrl)
+		if err != nil {
+			app.logger.Error("%v", err)
+		}
+
+		// Add qr to S3
+		qrId := uuid.New()
+		qrURL, err := app.s3.UploadFile(r.Context(), qrId.String()+".png", img)
+		if err != nil {
+			app.logger.Error("%v", err)
+		}
+		link.QRUrl = qrURL
+
+		// INSERT LINK INTO DB
+		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix, link.QRUrl)
 		if err != nil {
 			app.serverError(w, r, err)
 			return
@@ -100,27 +121,19 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a short URL
-	hostAddr := r.Host
-	shortUrl, err := link.CreateShortUrl(hostAddr)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
+	if link.ShortUrl == "" {
+		shortUrl, err := link.CreateShortUrl(r.Host)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		link.ShortUrl = shortUrl
 	}
 
-	link.ShortUrl = shortUrl
-	// Add the short URL to the data template
+	// Add shortURL & QRUrl to the data template
 	data.Link = &link
+	data.QRImgPath = link.QRUrl
 
-	// Create QR
-	qrPath, err := app.qr.CreateMedium(shortUrl)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	data.QRImgPath = qrPath
-
-	// Render the form template with the short URL
 	data.Flash = "Link successfully created!"
 	app.render(w, r, http.StatusCreated, "form.tmpl", data)
 }
