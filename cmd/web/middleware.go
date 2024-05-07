@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	userSessions "github.com/TimEngleSF/url-shortener-go/internal/session"
 	"github.com/justinas/nosurf"
 )
 
@@ -77,7 +78,7 @@ func noSurf(next http.Handler) http.Handler {
 
 func (app *application) authenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetInt(r.Context(), userSessions.Keys.AuthenticatedUserID)
 		if id == 0 {
 			next.ServeHTTP(w, r)
 			return

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TimEngleSF/url-shortener-go/internal/models"
+	userSessions "github.com/TimEngleSF/url-shortener-go/internal/session"
 	validator "github.com/TimEngleSF/url-shortener-go/internal/validators"
 	"github.com/google/uuid"
 )
@@ -76,7 +77,7 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// FIND URL IN DB
-	link, err = app.link.GetByURL(r.Context(), linkStr)
+	link, err = app.link.GetByURL(r.Context(), linkStr, r.Host)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			// If the URL does not exist, create a new Link struct in next block
@@ -113,24 +114,29 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		link.QRUrl = qrURL
 
 		// INSERT LINK INTO DB
-		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix, link.QRUrl)
+		_, err = app.link.Insert(r.Context(), link.RedirectUrl, link.Suffix, link.QRUrl, r.Host)
 		if err != nil {
 			app.serverError(w, r, err)
 			return
 		}
 	}
 
-	// Create a short URL
-	if link.ShortUrl == "" {
-		shortUrl, err := link.CreateShortUrl(r.Host)
+	// ADD LINK TO USER IF AUTHENTICATED
+	if app.isAuthenticated(r) {
+		userId := app.sessionManager.GetInt(r.Context(), userSessions.Keys.AuthenticatedUserID)
+		hasLink, err := app.user.HasLink(r.Context(), userId, link.ID)
 		if err != nil {
-			app.serverError(w, r, err)
-			return
+			app.logger.Error("Error checking user-link: %v\n", err)
 		}
-		link.ShortUrl = shortUrl
+
+		if !hasLink {
+			err := app.user.AddLink(r.Context(), userId, link.ID)
+			if err != nil {
+				app.logger.Error("Error adding user-link: %v\n", err)
+			}
+		}
 	}
 
-	// Add shortURL & QRUrl to the data template
 	data.Link = &link
 	data.QRImgPath = link.QRUrl
 
@@ -189,6 +195,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if exists {
 		form.AddFieldError("email", "This Email already in use")
 		data.Form = form
+		app.render(w, r, http.StatusInternalServerError, "signup.tmpl", data)
 		return
 	}
 
@@ -274,7 +281,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", user.ID)
+	app.sessionManager.Put(r.Context(), userSessions.Keys.AuthenticatedUserID, user.ID)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -286,7 +293,7 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Remove(r.Context(), userSessions.Keys.AuthenticatedUserID)
 	app.sessionManager.Put(r.Context(), "flash", "You have been logged out successfully!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

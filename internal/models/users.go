@@ -32,6 +32,9 @@ type UserModelInterface interface {
 	ChangePassword(ctx context.Context, id int, currentPassword, newPassword string) error
 	ExistsByID(ctx context.Context, id int) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	AddLink(ctx context.Context, user_id, link_id int) error
+	HasLink(ctx context.Context, user_id, link_id int) (bool, error)
+	GetLinks(ctx context.Context, user_id int, host string) ([]Link, error)
 }
 
 func (m *UserModel) Insert(ctx context.Context, name, email, password string) error {
@@ -127,6 +130,70 @@ func (m *UserModel) ExistsByEmail(ctx context.Context, email string) (bool, erro
 	return doessExist, nil
 }
 
+func (m *UserModel) AddLink(ctx context.Context, user_id, link_id int) error {
+	stmt := `
+  INSERT INTO user_links (
+    user_id,
+    link_id
+  )
+  VALUES (
+    $1,
+    $2
+  )
+  `
+	_, err := m.DB.Exec(ctx, stmt, user_id, link_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) GetLinks(ctx context.Context, user_id int, host string) ([]Link, error) {
+	stmt := `
+  SELECT l.*
+  FROM links l
+  JOIN users_links ul ON l.link_id = ul.link_id
+  WHERE ul.user_id = $1
+  `
+	links := []Link{}
+
+	rows, err := m.DB.Query(ctx, stmt, user_id)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			fmt.Println(pgErr.Code)
+			fmt.Println(pgErr.Message)
+			return nil, err
+		}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l Link
+		err := rows.Scan(&l.ID, &l.RedirectUrl, &l.Suffix, &l.QRUrl, &l.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		l.ShortUrl, _ = l.CreateShortUrl(host)
+		links = append(links, l)
+	}
+	return links, nil
+}
+
+func (m *UserModel) HasLink(ctx context.Context, user_id, link_id int) (bool, error) {
+	stmt := `
+  SELECT EXISTS(
+    SELECT 1 FROM user_links
+    WHERE user_id = $1 AND link_id = $2);
+  `
+	var exists bool
+	err := m.DB.QueryRow(ctx, stmt, user_id, link_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	return string(bytes), err
@@ -165,4 +232,8 @@ func exists(db *pgxpool.Pool, ctx context.Context, value interface{}) (bool, err
 	}
 
 	return exists, nil
+}
+
+func (m *UserModel) InsertLink(user_id, link_id int) error {
+	return nil
 }
