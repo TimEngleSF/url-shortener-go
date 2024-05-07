@@ -121,8 +121,20 @@ func (app *application) LinkPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// ADD LINK TO USER IF AUTHENTICATED
 	if app.isAuthenticated(r) {
-		app.sessionManager.GetInt(r.Context(), userSessions.Keys.AuthenticatedUserID)
+		userId := app.sessionManager.GetInt(r.Context(), userSessions.Keys.AuthenticatedUserID)
+		hasLink, err := app.user.HasLink(r.Context(), userId, link.ID)
+		if err != nil {
+			app.logger.Error("Error checking user-link: %v\n", err)
+		}
+
+		if !hasLink {
+			err := app.user.AddLink(r.Context(), userId, link.ID)
+			if err != nil {
+				app.logger.Error("Error adding user-link: %v\n", err)
+			}
+		}
 	}
 
 	data.Link = &link

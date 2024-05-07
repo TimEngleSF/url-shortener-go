@@ -49,3 +49,15 @@ func (m *UserMock) ExistsByEmail(ctx context.Context, email string) (bool, error
 		return false, nil
 	}
 }
+
+func (m *UserMock) AddLink(ctx context.Context, user_id, link_id int) error {
+	return nil
+}
+
+func (m *UserMock) HasLink(ctx context.Context, user_id, link_id int) (bool, error) {
+	return true, nil
+}
+
+func (m *UserMock) GetLinks(ctx context.Context, user_id int, host string) ([]models.Link, error) {
+	return nil, nil
+}
